@@ -77,14 +77,14 @@ class ntagGenerator(Sequence):
     Generate training or testing set in batches
     to speed up GPU performance and handle 
     larger-than-memory datasets
+    for training / testing (train=True/False)
+    Mode:     'xy'= each batch contains (features, targets)
+              'x' = features only
+              'y' = targets only
     '''
     def __init__(self, N10th=7, num_files=1, test_frac=0.25, batch_size=32, train=True, start_file=0, mode='xy'):
         '''
-        Initialize generator with a given batch_size
-        for either training (train=True) or testing (train=False)
-        Mode: xy= each batch contains (features, targets)
-              x = features only
-              y = targets only
+        Initialize generator
         '''
         if mode not in ['xy','yx','x','y']: raise ValueError("mode must be chosen from: 'xy','yx','x','y'")
         self.N10th = N10th
@@ -96,33 +96,41 @@ class ntagGenerator(Sequence):
         self.files = [dset_location+'%03i.hdf5'%i for i in range(start_file, start_file+num_files)]
         self.mode = mode
         self.lengths = [] # Number of entries for each data file
+        self.indices = [] # Indices corresponding to valid entries after filtering, for each file
+        self.__filter()
+
+    def __filter(self):
+        '''
+        Apply cuts and select training/testing set
+        '''
         for fname in self.files:
             f = h5py.File(fname,'r') # Load data
             dset = f['sk2p2']
+            dset_indices = np.array(range(len(dset))) # Get indices
+
             presel = dset["N10"]>=self.N10th  # Preselection cut
-            # Select testing or training fraction
-            frac = (dset["event_num"]%self.frac_num!=0) if self.train else (dset["event_num"]%self.frac_num==0)
-            y = dset["is_signal"]
-            y_frac = y[frac & presel]
-            self.lengths += [len(y_frac)]  # number of entries in current file
+            frac = (dset["event_num"]%self.frac_num!=0) if self.train else (dset["event_num"]%self.frac_num==0) # Select testing or training fraction
+            dset_indices = dset_indices[frac & presel] # Filtered indices, file-specific
+
+            self.lengths += [len(dset_indices)]  # number of entries in current file
+            self.indices += [dset_indices]
+
             f.close()
         self.l_tot = np.sum(self.lengths) # Total number of entries
-    
+
+
     def __len__(self):
         '''Number of batches'''
-        if self.train: return int(np.ceil( self.l_tot / float(self.batch_size) ) / (1.-self.test_frac))
-        else: return int(np.ceil( self.l_tot / float(self.batch_size) ) / self.test_frac)
-    
+        return int( np.ceil( self.l_tot / float(self.batch_size) ) )
+
     def __generate_batch(self, ifile, istart, istop):
         ''' Generate 1 batch of data'''
         f = h5py.File(self.files[ifile],'r') # Load data file
-        dset = f['sk2p2'][istart:istop] # Only load batch into memory
-        presel = dset["N10"]>=self.N10th # Preselection cut
+
+        batch_indices = list(self.indices[ifile][istart:istop])
+        batch = f['sk2p2'][batch_indices] # Only load batch into memory
         
-        frac = (dset["event_num"]%self.frac_num!=0) if self.train else (dset["event_num"]%self.frac_num==0) #Train or test fraction
-        frac = frac & presel
-        x, y = dset[varlist], dset["is_signal"]
-        x_batch, y_batch = x[frac], y[frac]
+        x_batch, y_batch = batch[varlist], batch["is_signal"]
         x_batch = unstruc(x_batch) # Remove ndarry structure
         if is_invalid(x_batch): raise ValueError("Invalid value found in a batch from file %d"%ifile)
 
@@ -134,36 +142,26 @@ class ntagGenerator(Sequence):
         '''Get batch of data number idx'''
         istart, istop = idx*self.batch_size, (idx+1)*self.batch_size
         if istop > self.l_tot: istop = self.l_tot # Resize the last batch
+
         ifile = 0
         multifile = False # Whether a batch includes entries from two files
-        
         for i,l in enumerate(self.lengths):
-            if istart >= l: # Batch not in current file
+            if istart >= l and not multifile: # Batch not in current file
                 istart -= l
                 istop -= l
-            elif istop > l: # Batch starts in current file
+            elif istop > l: # Batch starts in current file, ends in next
                 multifile = True
                 istop -= l
             else: # Batch starts and ends in current file
                 ifile = i
                 break
-        
+    
         if multifile:
             istop0 = self.lengths[ifile-1]
             batch0 = self.__generate_batch(ifile-1, istart, istop0)
             batch1 = self.__generate_batch(ifile, 0, istop)
             if 'x' in self.mode and 'y' in self.mode:
-                x_batch = np.concatenate((batch0[0], batch1[0]))
-                y_batch = np.concatenate((batch0[1], batch1[1]))
-                return x_batch, y_batch
+                return np.concatenate((batch0[0], batch1[0])), np.concatenate((batch0[1], batch1[1]))
             else: return np.concatenate((batch0, batch1))
         else:
             return self.__generate_batch(ifile, istart, istop)
-
-
-
-model=load_model("NN\\batch_size\\NN22_n7_10epoch_32batch_1")
-x_test_gen= ntagGenerator(train=False, mode='x',batch_size=64)
-y_test, _ = load_dset(mode='y')
-ntag_pred = model.predict_generator(x_test_gen)
-print(len(y_test), np.shape(ntag_pred), np.shape(x_test_gen))
