@@ -5,8 +5,8 @@ from joblib import load, dump
 from keras.utils import Sequence
 
 # Linux
-# dset_location = "/media/alberto/KINGSTON/Data/hdf5_flat/shift0/" # Directory of flattened (1 peak/entry) hdf5 files
-# model_location = "/home/alberto/SK19/ntag_algo/models/" # Directory of trained ntag models
+#dset_location = "/media/alberto/KINGSTON/Data/hdf5_flat/shift0/" # Directory of flattened (1 peak/entry) hdf5 files
+#model_location = "/home/alberto/SK19/ntag_algo/models/" # Directory of trained ntag models
 # Windows
 dset_location = "F:\\Data\\hdf5_flat\\shift0\\"
 model_location = "D:\\Alberto\\University\\X_HS_2018_2019\\DSNB_SK\\Neutron_tagging\\ntag_local\\models\\"
@@ -61,6 +61,7 @@ def load_dset(N10th=7, num_files=1, test_frac=0.25, mode='xy', start_file=0):
     else: return y_test, y_train
 
 def load_model(model_name): return load(model_location + "%s.joblib" % model_name)
+def load_hist(model_name): return load(model_location + "%s_hist.joblib" % model_name)
 
 def save_model(model, model_name, hist=None):
     ''' Save a model (and, optionally, its history)'''

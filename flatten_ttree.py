@@ -1,12 +1,13 @@
 import threading as thr
+from sys import argv
 from queue import Queue
 from ROOT import TFile, TTree, TChain
 from array import array
 
 multithread=False
 max_threads = 3
-rootfile_ins = ["/media/alberto/KINGSTON/Data/shift0/%03i.root"%i for i in range(20,200)]
-rootfile_outs = ["/media/alberto/KINGSTON/Data/flat/shift0/%03i.root"%i for i in range(20,200)]
+
+start, stop = 50, 100 # Process files numbers [start, stop)
 
 
 def flatten(rootfile_in, rootfile_out):
@@ -189,6 +190,16 @@ def worker(q):
         q.task_done
 
 if __name__=='__main__':
+
+    try:
+        start, stop = int(argv[1]), int(argv[2])
+    except IndexError:
+        pass
+    print("Flattening files from number %i to %i" % (start, stop-1))
+
+    rootfile_ins = ["/media/alberto/KINGSTON/Data/shift0/%03i.root"%i for i in range(start,stop)]
+    rootfile_outs = ["/media/alberto/KINGSTON/Data/flat/shift0/%03i.root"%i for i in range(start,stop)]
+
     if multithread:
         myqueue = Queue()
         for e in zip(rootfile_ins, rootfile_outs):
