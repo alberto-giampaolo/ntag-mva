@@ -17,14 +17,18 @@ def plot_ROC(x_test, y_test, models_names_n7=[], models_names_n8=[], time_dep_te
 
     for model, name in models_names_n7:
         pre_eff, bg_ev = (pre_eff6_srn,bg_per_ev6_srn) if SRN_scale else (pre_eff6,bg_per_ev6)
-        ntag_pred = model.predict_proba(x_test)[:,1]
+        try:
+            ntag_pred = model.predict_proba(x_test)[:,1]
+        except IndexError:
+            ntag_pred = model.predict(x_test)
         ntag_fp, ntag_tp, _ = roc_curve(y_test,ntag_pred)
         plt.plot(pre_eff*ntag_tp,bg_ev*ntag_fp,label=name, linewidth=1)
+
     for model, name in models_names_n8:
         pre_eff, bg_ev = (pre_eff7_srn,bg_per_ev7_srn) if SRN_scale else (pre_eff7,bg_per_ev7)
         try:
             ntag_pred = model.predict_proba(x_test)[:,1]
-        except:
+        except IndexError:
             ntag_pred = model.predict(x_test)
         ntag_fp, ntag_tp, _ = roc_curve(y_test,ntag_pred)
         plt.plot(pre_eff*ntag_tp,bg_ev*ntag_fp,label=name, linewidth=1)
@@ -32,7 +36,7 @@ def plot_ROC(x_test, y_test, models_names_n7=[], models_names_n8=[], time_dep_te
     plt.xlabel('Signal efficiency')
     plt.ylabel('Accidental coincidences/event')
     plt.legend(frameon=False, loc="best")
-    plt.yscale('log')
+    #plt.yscale('log')
     #plt.xlim(0.06,0.45)
     #plt.ylim(0.00001,1.5)
     plt.grid(which='both')

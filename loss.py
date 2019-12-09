@@ -21,3 +21,15 @@ def plot_loss(bdt_model,ntrees,x_test,y_test):
     plt.ylabel("Loss")
     plt.title("Neutron tagging model training")
     plt.show()
+
+def plot_loss_hist(hists, labels, metric):
+    '''
+    Plot deviance given a history object
+    '''
+    for h, l in zip(hists, labels):
+        plt.plot(h.history[metric], label=l)
+    plt.ylabel('Loss')
+    plt.xlabel('Training epoch')
+    plt.yscale('log')
+    plt.legend()
+    plt.show()
