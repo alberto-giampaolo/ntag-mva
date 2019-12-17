@@ -6,8 +6,8 @@ from roc import plot_ROC_sigle
 from loss import plot_loss
 
 
-N10TH = 8
-NFILES = 10
+N10TH = 7
+NFILES = 2
 XGB = True # Whether to use XGBoost rather than regular Grad Boosting
 NTREES = 850
 LRATE = 0.1

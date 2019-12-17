@@ -1,20 +1,13 @@
-from os import environ, devnull
-environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Suppress avalanche of tensorflow info outputs
- 
-import sys
-stderr = sys.stderr
-sys.stderr = open(devnull, 'w') # Suppress Keras info outputs
+
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from keras.optimizers import SGD, Adam
-sys.stderr = stderr
-
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+from matplotlib import use as mpl_use
 from load_ntag import load_dset, save_model, ntagGenerator
 from roc import plot_ROC_sigle, plot_ROC_sigle_gen
-
 
 
 N10TH = 7
@@ -24,7 +17,7 @@ NEPOCHS = 2
 BATCH_SIZE = 256
 NLAYERS = 1
 NNODES = 50
-model_name = "NN22_n%i_%iepoch_%ibatch_%ix%i_%i"%(N10TH, NEPOCHS,BATCH_SIZE, NLAYERS,NNODES,NFILES)
+model_name = "polui_tests/NN22_n%i_%iepoch_%ibatch_%ix%i_%i"%(N10TH, NEPOCHS,BATCH_SIZE, NLAYERS,NNODES,NFILES)
 
 if __name__ == '__main__':
     #x_test, x_train, y_test, y_train = load_dset(N10TH, NFILES)

@@ -4,12 +4,16 @@ from numpy.lib.recfunctions import structured_to_unstructured as unstruc
 from joblib import load, dump
 from keras.utils import Sequence
 
-# Linux
+# polui
+dset_location = "/data_CMS/cms/giampaolo/ntag-dset/hdf5_flat/shift0/"
+model_location = "/home/llr/t2k/giampaolo/srn/ntag-mva/models/"
+
+# local Linux
 #dset_location = "/media/alberto/KINGSTON/Data/hdf5_flat/shift0/" # Directory of flattened (1 peak/entry) hdf5 files
 #model_location = "/home/alberto/SK19/ntag_algo/models/" # Directory of trained ntag models
 # Windows
-dset_location = "F:\\Data\\hdf5_flat\\shift0\\"
-model_location = "D:\\Alberto\\University\\X_HS_2018_2019\\DSNB_SK\\Neutron_tagging\\ntag_local\\models\\"
+#dset_location = "F:\\Data\\hdf5_flat\\shift0\\"
+#model_location = "D:\\Alberto\\University\\X_HS_2018_2019\\DSNB_SK\\Neutron_tagging\\ntag_local\\models\\"
 
 varlist = '''N10 N10d Nc Nback N300 trms trmsdiff fpdist bpdist 
             fwall bwall bse mintrms_3 mintrms_6 Qrms Qmean 

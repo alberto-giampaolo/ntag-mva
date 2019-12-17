@@ -5,10 +5,10 @@ from load_ntag import load_dset, load_model, load_hist
 from roc import plot_ROC
 from loss import plot_loss, plot_loss_hist
 
-model_names = ['NN\\dset_size\\NN22_n7_10epoch_256batch_2x50_5',
-'NN\\dset_size\\NN22_n7_10epoch_256batch_2x50_10',
-'NN\\dset_size\\NN22_n7_10epoch_256batch_2x50_20',
-'NN\\dset_size\\NN22_n7_10epoch_256batch_2x50_50']
+model_names = ['NN/dset_size/NN22_n7_10epoch_256batch_2x50_5',
+'NN/dset_size/NN22_n7_10epoch_256batch_2x50_10',
+'NN/dset_size/NN22_n7_10epoch_256batch_2x50_20',
+'NN/dset_size/NN22_n7_10epoch_256batch_2x50_50']
 
 N10TH = 7 # N10 Threshold
 NFILES = 10 # Number of datafiles to use (50,000 events/file, maximum 200 files)
