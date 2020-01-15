@@ -1,8 +1,8 @@
 import numpy as np
 import h5py
-from numpy.lib.recfunctions import structured_to_unstructured as unstruc
 from joblib import load, dump
 from keras.utils import Sequence
+
 
 # polui
 dset_location = "/data_CMS/cms/giampaolo/ntag-dset/hdf5_flat/shift0/"
@@ -11,7 +11,7 @@ model_location = "/home/llr/t2k/giampaolo/srn/ntag-mva/models/"
 # local Linux
 #dset_location = "/media/alberto/KINGSTON/Data/hdf5_flat/shift0/" # Directory of flattened (1 peak/entry) hdf5 files
 #model_location = "/home/alberto/SK19/ntag_algo/models/" # Directory of trained ntag models
-# Windows
+# local Windows
 #dset_location = "F:\\Data\\hdf5_flat\\shift0\\"
 #model_location = "D:\\Alberto\\University\\X_HS_2018_2019\\DSNB_SK\\Neutron_tagging\\ntag_local\\models\\"
 
@@ -19,6 +19,84 @@ varlist = '''N10 N10d Nc Nback N300 trms trmsdiff fpdist bpdist
             fwall bwall bse mintrms_3 mintrms_6 Qrms Qmean 
             thetarms NLowtheta phirms thetam NhighQ Nlow '''.split()
 
+
+def get_fields_and_offsets(dt, offset=0):
+    """
+    Returns a flat list of (dtype, count, offset) tuples of all the
+    scalar fields in the dtype "dt", including nested fields, in left
+    to right order.
+    """
+    fields = []
+    for name in dt.names:
+        field = dt.fields[name]
+        if field[0].names is None:
+            count = 1
+            for size in field[0].shape:
+                count *= size
+            fields.append((field[0], count, field[1] + offset))
+        else:
+            fields.extend(get_fields_and_offsets(field[0], field[1] + offset))
+    return fields
+
+def unstructure(arr, dtype=None, copy=False, casting='unsafe'):
+    """
+    Converts and n-D structured array into an (n+1)-D unstructured array.
+    The new array will have a new last dimension equal in size to the
+    number of field-elements of the input array. If not supplied, the output
+    datatype is determined from the numpy type promotion rules applied to all
+    the field datatypes.
+    Nested fields, as well as each element of any subarray fields, all count
+    as a single field-elements.
+    Parameters
+    ----------
+    arr : ndarray
+       Structured array or dtype to convert. Cannot contain object datatype.
+    dtype : dtype, optional
+       The dtype of the output unstructured array.
+    copy : bool, optional
+        See copy argument to `ndarray.astype`. If true, always return a copy.
+        If false, and `dtype` requirements are satisfied, a view is returned.
+    casting : {'no', 'equiv', 'safe', 'same_kind', 'unsafe'}, optional
+        See casting argument of `ndarray.astype`. Controls what kind of data
+        casting may occur.
+    Returns
+    -------
+    unstructured : ndarray
+       Unstructured array with one more dimension.
+    Examples
+    --------
+    """
+    if arr.dtype.names is None:
+        raise ValueError('arr must be a structured array')
+
+    fields = get_fields_and_offsets(arr.dtype)
+    n_fields = len(fields)
+    dts, counts, offsets = zip(*fields)
+    names = ['f{}'.format(n) for n in range(n_fields)]
+
+    if dtype is None:
+        out_dtype = np.result_type(*[dt.base for dt in dts])
+    else:
+        out_dtype = dtype
+
+    # Use a series of views and casts to convert to an unstructured array:
+
+    # first view using flattened fields (doesn't work for object arrays)
+    # Note: dts may include a shape for subarrays
+    flattened_fields = np.dtype({'names': names,
+                                 'formats': dts,
+                                 'offsets': offsets,
+                                 'itemsize': arr.dtype.itemsize})
+    
+    arr = arr.view(flattened_fields)
+
+    # next cast to a packed format with all fields converted to new dtype
+    packed_fields = np.dtype({'names': names,
+                              'formats': [(out_dtype, dt.shape) for dt in dts]})
+    arr = arr.astype(packed_fields, copy=copy, casting=casting)
+
+    # finally is it safe to view the packed fields as the unstructured type
+    return arr.view((out_dtype, (sum(counts),)))
 
 def load_dset(N10th=7, num_files=1, test_frac=0.25, mode='xy', start_file=0):
     '''
@@ -48,7 +126,7 @@ def load_dset(N10th=7, num_files=1, test_frac=0.25, mode='xy', start_file=0):
             x = dset[myvars]
             x_itest, x_itrain = x[test], x[train]
             # Remove ndarry structure, converting to unstructured float ndarray
-            x_itest, x_itrain = unstruc(x_itest), unstruc(x_itrain)
+            x_itest, x_itrain = unstructure(x_itest), unstructure(x_itrain)
             x_test += [x_itest]
             x_train += [x_itrain]
         if 'y' in mode:
@@ -65,11 +143,19 @@ def load_dset(N10th=7, num_files=1, test_frac=0.25, mode='xy', start_file=0):
     else: return y_test, y_train
 
 def load_model(model_name): return load(model_location + "%s.joblib" % model_name)
-def load_hist(model_name): return load(model_location + "%s_hist.joblib" % model_name)
+def load_hist(model_name):
+    try:
+        return load(model_location + "%s_hist.joblib" % model_name)
+    except FileNotFoundError:
+        try:
+            return load_model(model_name).evals_result()
+        except:
+            raise FileNotFoundError("No training history found")
+    
 
-def save_model(model, model_name, hist=None):
+def save_model(model, model_name, hist=None, subloc=""):
     ''' Save a model (and, optionally, its history)'''
-    dump(model, model_location + "%s.joblib" % model_name)
+    dump(model, model_location+subloc + "%s.joblib" % model_name)
     if hist: dump(hist, model_location + "%s_hist.joblib" % model_name)
 
 def is_invalid(array):
@@ -136,7 +222,7 @@ class ntagGenerator(Sequence):
         batch = f['sk2p2'][batch_indices] # Only load batch into memory
         
         x_batch, y_batch = batch[varlist], batch["is_signal"]
-        x_batch = unstruc(x_batch) # Remove ndarry structure
+        x_batch = unstructure(x_batch) # Remove ndarry structure
         if is_invalid(x_batch): raise ValueError("Invalid value found in a batch from file %d"%ifile)
 
         if 'x' in self.mode and 'y' in self.mode: return x_batch, y_batch
