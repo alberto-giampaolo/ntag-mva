@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 from load_ntag import load_dset, save_model, ntagGenerator
-from roc import plot_ROC_sigle, plot_ROC_sigle_gen
+from metrics import plot_ROC_sigle, plot_ROC_sigle_gen
 
 
 
