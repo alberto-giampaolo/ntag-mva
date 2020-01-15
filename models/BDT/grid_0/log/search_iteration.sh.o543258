@@ -1,0 +1,44 @@
+/opt/exp_soft/llr/python/3.6.6/el7/bin/python
+Loading dataset...
+Training BDT
+[17:10:51] WARNING: /workspace/src/learner.cc:686: Tree method is automatically selected to be 'approx' for faster speed. To use old behavior (exact greedy algorithm on single machine), set tree_method to 'exact'.
+[0]	validation_0-mae:0.356863	validation_0-auc:0.89732	validation_1-mae:0.35915	validation_1-auc:0.897488
+[1]	validation_0-mae:0.272894	validation_0-auc:0.925402	validation_1-mae:0.272328	validation_1-auc:0.925627
+[2]	validation_0-mae:0.210402	validation_0-auc:0.944742	validation_1-mae:0.208481	validation_1-auc:0.944792
+[3]	validation_0-mae:0.16324	validation_0-auc:0.959188	validation_1-mae:0.165857	validation_1-auc:0.959102
+[4]	validation_0-mae:0.134851	validation_0-auc:0.960108	validation_1-mae:0.136111	validation_1-auc:0.960028
+[5]	validation_0-mae:0.115186	validation_0-auc:0.961875	validation_1-mae:0.115637	validation_1-auc:0.961792
+[6]	validation_0-mae:0.099641	validation_0-auc:0.965894	validation_1-mae:0.100744	validation_1-auc:0.965806
+[7]	validation_0-mae:0.089773	validation_0-auc:0.968802	validation_1-mae:0.089364	validation_1-auc:0.968649
+[8]	validation_0-mae:0.080742	validation_0-auc:0.970038	validation_1-mae:0.081488	validation_1-auc:0.969922
+[9]	validation_0-mae:0.075226	validation_0-auc:0.970925	validation_1-mae:0.075072	validation_1-auc:0.970795
+[10]	validation_0-mae:0.071553	validation_0-auc:0.972453	validation_1-mae:0.071108	validation_1-auc:0.972334
+[11]	validation_0-mae:0.067097	validation_0-auc:0.973349	validation_1-mae:0.067155	validation_1-auc:0.973213
+[12]	validation_0-mae:0.063379	validation_0-auc:0.973798	validation_1-mae:0.063592	validation_1-auc:0.973666
+[13]	validation_0-mae:0.061364	validation_0-auc:0.97463	validation_1-mae:0.061657	validation_1-auc:0.974517
+[14]	validation_0-mae:0.059427	validation_0-auc:0.975189	validation_1-mae:0.059934	validation_1-auc:0.975056
+[15]	validation_0-mae:0.057686	validation_0-auc:0.975905	validation_1-mae:0.058171	validation_1-auc:0.975761
+[16]	validation_0-mae:0.056122	validation_0-auc:0.976297	validation_1-mae:0.056631	validation_1-auc:0.976175
+[17]	validation_0-mae:0.054959	validation_0-auc:0.976647	validation_1-mae:0.055513	validation_1-auc:0.976537
+[18]	validation_0-mae:0.054128	validation_0-auc:0.977021	validation_1-mae:0.054654	validation_1-auc:0.976907
+[19]	validation_0-mae:0.053105	validation_0-auc:0.977343	validation_1-mae:0.053621	validation_1-auc:0.977227
+[20]	validation_0-mae:0.052469	validation_0-auc:0.977671	validation_1-mae:0.052974	validation_1-auc:0.977563
+[21]	validation_0-mae:0.051653	validation_0-auc:0.97776	validation_1-mae:0.052126	validation_1-auc:0.977651
+[22]	validation_0-mae:0.051007	validation_0-auc:0.977985	validation_1-mae:0.051463	validation_1-auc:0.977884
+[23]	validation_0-mae:0.050682	validation_0-auc:0.978276	validation_1-mae:0.051107	validation_1-auc:0.978177
+[24]	validation_0-mae:0.050274	validation_0-auc:0.978454	validation_1-mae:0.050687	validation_1-auc:0.978352
+[25]	validation_0-mae:0.049343	validation_0-auc:0.978743	validation_1-mae:0.049732	validation_1-auc:0.97865
+[26]	validation_0-mae:0.048842	validation_0-auc:0.979067	validation_1-mae:0.049223	validation_1-auc:0.978976
+[27]	validation_0-mae:0.048413	validation_0-auc:0.9792	validation_1-mae:0.04879	validation_1-auc:0.979109
+[28]	validation_0-mae:0.047895	validation_0-auc:0.979479	validation_1-mae:0.048259	validation_1-auc:0.979381
+[29]	validation_0-mae:0.047664	validation_0-auc:0.979609	validation_1-mae:0.048024	validation_1-auc:0.979505
+[30]	validation_0-mae:0.047381	validation_0-auc:0.97977	validation_1-mae:0.047713	validation_1-auc:0.979666
+[31]	validation_0-mae:0.04669	validation_0-auc:0.979875	validation_1-mae:0.047016	validation_1-auc:0.97978
+[32]	validation_0-mae:0.046465	validation_0-auc:0.979947	validation_1-mae:0.046797	validation_1-auc:0.97985
+[33]	validation_0-mae:0.046211	validation_0-auc:0.980081	validation_1-mae:0.046535	validation_1-auc:0.979984
+[34]	validation_0-mae:0.046011	validation_0-auc:0.980152	validation_1-mae:0.046335	validation_1-auc:0.980048
+[35]	validation_0-mae:0.045862	validation_0-auc:0.980202	validation_1-mae:0.046187	validation_1-auc:0.980092
+[36]	validation_0-mae:0.045446	validation_0-auc:0.980347	validation_1-mae:0.045766	validation_1-auc:0.980229
+[37]	validation_0-mae:0.045213	validation_0-auc:0.98041	validation_1-mae:0.045519	validation_1-auc:0.980297
+[38]	validation_0-mae:0.04505	validation_0-auc:0.98047	validation_1-mae:0.045357	validation_1-auc:0.980362
+[39]	validation_0-mae:0.044846	validation_0-auc:0.980576	validation_1-mae:0.045145	validation_1-auc:0.980468

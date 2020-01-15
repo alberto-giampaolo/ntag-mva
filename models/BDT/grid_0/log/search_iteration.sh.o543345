@@ -1,0 +1,41 @@
+/opt/exp_soft/llr/python/3.6.6/el7/bin/python
+Loading dataset...
+Training BDT
+[11:10:46] WARNING: /workspace/src/learner.cc:686: Tree method is automatically selected to be 'approx' for faster speed. To use old behavior (exact greedy algorithm on single machine), set tree_method to 'exact'.
+[0]	validation_0-mae:0.497886	validation_0-auc:0.897139	validation_1-mae:0.493658	validation_1-auc:0.89731
+[1]	validation_0-mae:0.491341	validation_0-auc:0.897338	validation_1-mae:0.47901	validation_1-auc:0.897503
+[2]	validation_0-mae:0.474268	validation_0-auc:0.902687	validation_1-mae:0.472531	validation_1-auc:0.902861
+[3]	validation_0-mae:0.463918	validation_0-auc:0.902691	validation_1-mae:0.466584	validation_1-auc:0.902866
+[4]	validation_0-mae:0.457237	validation_0-auc:0.906786	validation_1-mae:0.452601	validation_1-auc:0.906986
+[5]	validation_0-mae:0.442629	validation_0-auc:0.906668	validation_1-mae:0.446097	validation_1-auc:0.906876
+[6]	validation_0-mae:0.435372	validation_0-auc:0.906635	validation_1-mae:0.43956	validation_1-auc:0.906843
+[7]	validation_0-mae:0.430564	validation_0-auc:0.922569	validation_1-mae:0.429155	validation_1-auc:0.922575
+[8]	validation_0-mae:0.414834	validation_0-auc:0.922906	validation_1-mae:0.420679	validation_1-auc:0.923005
+[9]	validation_0-mae:0.408964	validation_0-auc:0.939537	validation_1-mae:0.413811	validation_1-auc:0.939584
+[10]	validation_0-mae:0.398013	validation_0-auc:0.94381	validation_1-mae:0.405647	validation_1-auc:0.943842
+[11]	validation_0-mae:0.393539	validation_0-auc:0.945813	validation_1-mae:0.397193	validation_1-auc:0.945872
+[12]	validation_0-mae:0.390839	validation_0-auc:0.945907	validation_1-mae:0.392063	validation_1-auc:0.945967
+[13]	validation_0-mae:0.388003	validation_0-auc:0.946873	validation_1-mae:0.384653	validation_1-auc:0.94702
+[14]	validation_0-mae:0.382387	validation_0-auc:0.94705	validation_1-mae:0.376734	validation_1-auc:0.947199
+[15]	validation_0-mae:0.378883	validation_0-auc:0.950033	validation_1-mae:0.369439	validation_1-auc:0.950099
+[16]	validation_0-mae:0.361792	validation_0-auc:0.950247	validation_1-mae:0.364893	validation_1-auc:0.950316
+[17]	validation_0-mae:0.35498	validation_0-auc:0.950752	validation_1-mae:0.357896	validation_1-auc:0.950817
+[18]	validation_0-mae:0.34836	validation_0-auc:0.950947	validation_1-mae:0.350448	validation_1-auc:0.95102
+[19]	validation_0-mae:0.340411	validation_0-auc:0.951607	validation_1-mae:0.344177	validation_1-auc:0.951704
+[20]	validation_0-mae:0.337792	validation_0-auc:0.951918	validation_1-mae:0.33938	validation_1-auc:0.952007
+[21]	validation_0-mae:0.334173	validation_0-auc:0.953101	validation_1-mae:0.332414	validation_1-auc:0.953189
+[22]	validation_0-mae:0.328504	validation_0-auc:0.953531	validation_1-mae:0.326429	validation_1-auc:0.953635
+[23]	validation_0-mae:0.325388	validation_0-auc:0.954956	validation_1-mae:0.319951	validation_1-auc:0.955036
+[24]	validation_0-mae:0.314292	validation_0-auc:0.954721	validation_1-mae:0.316145	validation_1-auc:0.954784
+[25]	validation_0-mae:0.309951	validation_0-auc:0.955584	validation_1-mae:0.311369	validation_1-auc:0.955667
+[26]	validation_0-mae:0.303229	validation_0-auc:0.95583	validation_1-mae:0.304759	validation_1-auc:0.955928
+[27]	validation_0-mae:0.296686	validation_0-auc:0.95649	validation_1-mae:0.29994	validation_1-auc:0.956576
+[28]	validation_0-mae:0.293537	validation_0-auc:0.956737	validation_1-mae:0.293753	validation_1-auc:0.95682
+[29]	validation_0-mae:0.288405	validation_0-auc:0.957142	validation_1-mae:0.290124	validation_1-auc:0.957208
+[30]	validation_0-mae:0.285334	validation_0-auc:0.95731	validation_1-mae:0.286167	validation_1-auc:0.957359
+[31]	validation_0-mae:0.281941	validation_0-auc:0.957464	validation_1-mae:0.278919	validation_1-auc:0.957516
+[32]	validation_0-mae:0.275968	validation_0-auc:0.95771	validation_1-mae:0.276312	validation_1-auc:0.957757
+[33]	validation_0-mae:0.27267	validation_0-auc:0.95805	validation_1-mae:0.272314	validation_1-auc:0.958113
+Trained model in 104786.450758 seconds
+Saving model to disk...
+All done!

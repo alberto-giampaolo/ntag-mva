@@ -1,0 +1,13 @@
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "/home/llr/t2k/giampaolo/srn/ntag-mva/param_search_bdt.py", line 45, in <module>
+    eval_metric=['mae','auc'])
+  File "/home/llr/t2k/giampaolo/.local/lib/python3.6/site-packages/xgboost/sklearn.py", line 711, in fit
+    for i in range(len(eval_set))
+  File "/home/llr/t2k/giampaolo/.local/lib/python3.6/site-packages/xgboost/sklearn.py", line 711, in <genexpr>
+    for i in range(len(eval_set))
+  File "/home/llr/t2k/giampaolo/.local/lib/python3.6/site-packages/xgboost/core.py", line 404, in __init__
+    self._init_from_npy2d(data, missing, nthread)
+  File "/home/llr/t2k/giampaolo/.local/lib/python3.6/site-packages/xgboost/core.py", line 478, in _init_from_npy2d
+    data = np.array(mat.reshape(mat.size), copy=False, dtype=np.float32)
+MemoryError

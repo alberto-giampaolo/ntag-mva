@@ -1,0 +1,5 @@
+/opt/exp_soft/llr/python/3.6.6/el7/bin/python
+Loading dataset...
+Training BDT
+[19:59:28] WARNING: /workspace/src/learner.cc:686: Tree method is automatically selected to be 'approx' for faster speed. To use old behavior (exact greedy algorithm on single machine), set tree_method to 'exact'.
+[0]	validation_0-mae:0.383878	validation_0-auc:0.89714	validation_1-mae:0.378811	validation_1-auc:0.89731

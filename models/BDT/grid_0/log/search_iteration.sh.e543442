@@ -1,0 +1,2 @@
+Using TensorFlow backend.
+/var/lib/condor/execute/dir_60659/condor_exec.exe: line 9: 60817 Killed                  python $SEARCH_ITER $1

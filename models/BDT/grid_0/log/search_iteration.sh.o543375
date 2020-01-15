@@ -1,0 +1,18 @@
+/opt/exp_soft/llr/python/3.6.6/el7/bin/python
+Loading dataset...
+Training BDT
+[20:56:43] WARNING: /workspace/src/learner.cc:686: Tree method is automatically selected to be 'approx' for faster speed. To use old behavior (exact greedy algorithm on single machine), set tree_method to 'exact'.
+[0]	validation_0-mae:0.430912	validation_0-auc:0.897141	validation_1-mae:0.430079	validation_1-auc:0.897309
+[1]	validation_0-mae:0.381562	validation_0-auc:0.913582	validation_1-mae:0.372546	validation_1-auc:0.913676
+[2]	validation_0-mae:0.328492	validation_0-auc:0.943413	validation_1-mae:0.325389	validation_1-auc:0.943533
+[3]	validation_0-mae:0.284552	validation_0-auc:0.946164	validation_1-mae:0.286227	validation_1-auc:0.946369
+[4]	validation_0-mae:0.253184	validation_0-auc:0.954258	validation_1-mae:0.251477	validation_1-auc:0.954412
+[5]	validation_0-mae:0.227313	validation_0-auc:0.957639	validation_1-mae:0.224094	validation_1-auc:0.957686
+[6]	validation_0-mae:0.201723	validation_0-auc:0.960794	validation_1-mae:0.200324	validation_1-auc:0.960808
+[7]	validation_0-mae:0.180427	validation_0-auc:0.962837	validation_1-mae:0.181277	validation_1-auc:0.962804
+[8]	validation_0-mae:0.162685	validation_0-auc:0.962854	validation_1-mae:0.162945	validation_1-auc:0.962793
+[9]	validation_0-mae:0.149499	validation_0-auc:0.96295	validation_1-mae:0.148289	validation_1-auc:0.962883
+[10]	validation_0-mae:0.135971	validation_0-auc:0.964995	validation_1-mae:0.136752	validation_1-auc:0.964967
+Trained model in 95442.717792 seconds
+Saving model to disk...
+All done!

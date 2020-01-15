@@ -1,0 +1,8 @@
+Using TensorFlow backend.
+Traceback (most recent call last):
+  File "/home/llr/t2k/giampaolo/srn/ntag-mva/param_search_bdt.py", line 29, in <module>
+    x_test, x_train, y_test, y_train = load_dset(N10TH,NFILES,0.25)
+  File "/grid_mnt/vol__vol_U__u/llr/t2k/giampaolo/srn/ntag-mva/load_ntag.py", line 138, in load_dset
+    if 'x' in mode: x_test, x_train = np.concatenate(x_test), np.concatenate(x_train)
+MemoryError
+/var/lib/condor/execute/dir_41595/condor_exec.exe: line 9: 41984 Killed                  python $SEARCH_ITER $1
