@@ -1,18 +1,20 @@
-#!/usr/bin/env bash
+#! /bin/bash
+source ~/.bash_profile
 
-PARAM_DIR="/home/llr/t2k/giampaolo/srn/ntag-mva/models/BDT/test_search/params"
-OUT_PREFIX="BDT/test_search/"
-SCRIPT="/home/llr/t2k/giampaolo/srn/ntag-mva/param_search_bdt.py"
+# Parameter file location to generate models
+PARAM_DIR="/home/llr/t2k/giampaolo/srn/ntag-mva/models/BDT/grid_0_extend_066_fast/params"
 
-PYTHON="/usr/bin/python3"
+# script with single iteration of hyperparameter search
+# python script wrapped in shell script
+ITER_WRAPPER="/home/llr/t2k/giampaolo/srn/ntag-mva/search_iteration.sh"
+
+# T3 cluster queue and T3 submit command
 QUEUE="long"
 SUBMIT="/opt/exp_soft/cms/t3/t3submit"
 
-
-
 for file in $PARAM_DIR/* ; do
-  if [ -e "$file" ] ; then   # Check whether file exists.
-     echo $SUBMIT -$QUEUE $PYTHON $SCRIPT $file $OUT_PREFIX${file: -3:1}
-     $SUBMIT -$QUEUE $PYTHON $SCRIPT $file $OUT_PREFIX${file: -3:1}
+  if [ -e "$file" ] ; then # Check whether file exists.
+     echo $SUBMIT -$QUEUE -avx $ITER_WRAPPER $file
+     $SUBMIT -$QUEUE -avx $ITER_WRAPPER $file
   fi
 done
