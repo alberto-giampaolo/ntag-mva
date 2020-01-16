@@ -28,8 +28,8 @@ model_name = "NN22_n%i_%iepoch_%ibatch_%ix%i_%i"%(N10TH, NEPOCHS,BATCH_SIZE, NLA
 
 if __name__ == '__main__':
     #x_test, x_train, y_test, y_train = load_dset(N10TH, NFILES)
-    train_gen = ntagGenerator(N10th=N10TH, num_files=NFILES, test_frac=0.25, batch_size=BATCH_SIZE, train=True, start_file=STARTFILE)
-    test_gen  = ntagGenerator(N10th=N10TH, num_files=NFILES, test_frac=0.25, batch_size=BATCH_SIZE, train=False, start_file=STARTFILE)
+    train_gen = ntagGenerator(N10th=N10TH, file_frac=NFILES/200., test_frac=0.25, batch_size=BATCH_SIZE, train=True)
+    test_gen  = ntagGenerator(N10th=N10TH, file_frac=NFILES/200., test_frac=0.25, batch_size=BATCH_SIZE, train=False)
 
     # Define neutron tagging model
     ntag_model = Sequential()
@@ -58,8 +58,8 @@ if __name__ == '__main__':
 
     # Plot ROC curve
     print("Plotting performance (ROC)")
-    y_test, _ = load_dset(N10TH, NFILES, mode='y', start_file=STARTFILE)
-    x_test_gen= ntagGenerator(N10th=N10TH, num_files=NFILES, test_frac=0.25, batch_size=BATCH_SIZE, train=False, mode='x', start_file=STARTFILE)
+    y_test, _ = load_dset(N10TH, file_frac=NFILES/200., mode='y')
+    x_test_gen= ntagGenerator(N10th=N10TH, file_frac=NFILES/200., test_frac=0.25, batch_size=BATCH_SIZE, train=False, mode='x')
     plot_ROC_sigle_gen(x_test_gen, y_test, ntag_model, model_name, N10TH)
 
     # Plot loss vs epoch

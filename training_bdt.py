@@ -17,7 +17,7 @@ model_name = "BDT22_n%i_%itree_%0.3flrate_%s%s%i" % (N10TH,NTREES,LRATE,SSstr,XG
 NTHREADS = 4
 
 # Load dataset
-x_test, x_train, y_test, y_train = load_dset(N10TH,NFILES,0.25)
+x_test, x_train, y_test, y_train = load_dset(N10TH, NFILES/200., 0.25)
 
 # Define neutron tagging model and start training
 #ntag_model = GradientBoostingClassifier(learning_rate=1.0,max_depth=3,n_estimators=850,min_samples_leaf=0.05,random_state=1,verbose=1)

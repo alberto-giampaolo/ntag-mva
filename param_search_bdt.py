@@ -23,7 +23,7 @@ model_name = param_file.split("/")[-1].split('.')[-2] # model has same name as p
 
 # Load dataset
 print("Loading dataset...")
-x_test, x_train, y_test, y_train = load_dset(N10TH,NFILES,0.25)
+x_test, x_train, y_test, y_train = load_dset(N10TH,file_frac=NFILES/200., test_frac=0.25)
 
 print("Training BDT")
 # Define neutron tagging model and start training

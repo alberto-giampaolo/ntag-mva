@@ -56,8 +56,8 @@ if __name__ == '__main__':
 
     #x_test, x_train, y_test, y_train = load_dset(N10TH, NFILES)
     print("Initializing dataset generators...")
-    train_gen = ntagGenerator(N10th=N10TH, num_files=NFILES, test_frac=0.25, batch_size=BATCH_SIZE, train=True, start_file=STARTFILE)
-    test_gen  = ntagGenerator(N10th=N10TH, num_files=NFILES, test_frac=0.25, batch_size=BATCH_SIZE, train=False, start_file=STARTFILE)
+    train_gen = ntagGenerator(N10th=N10TH, file_frac=NFILES/200., test_frac=0.25, batch_size=BATCH_SIZE, train=True)
+    test_gen  = ntagGenerator(N10th=N10TH, file_frac=NFILES/200., test_frac=0.25, batch_size=BATCH_SIZE, train=False)
     print("Generators initialized")
 
     # Train

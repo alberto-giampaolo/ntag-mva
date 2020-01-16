@@ -14,7 +14,7 @@ NFILES = 50 # Number of datafiles to use (50,000 events/file, maximum 200 files)
 
 # Load test datasets
 #print("Loading test set")
-#x_test, _, y_test, _ = load_dset(N10TH,NFILES)
+#x_test, _, y_test, _ = load_dset(N10TH,file_frac=NFILES/200.)
 
 # Load models
 print("Loading model(s)")
