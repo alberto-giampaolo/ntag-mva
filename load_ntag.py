@@ -1,5 +1,6 @@
 import numpy as np
 import h5py
+from glob import glob
 from joblib import load, dump
 from keras.utils import Sequence
 
@@ -63,8 +64,6 @@ def unstructure(arr, dtype=None, copy=False, casting='unsafe'):
     -------
     unstructured : ndarray
        Unstructured array with one more dimension.
-    Examples
-    --------
     """
     if arr.dtype.names is None:
         raise ValueError('arr must be a structured array')
@@ -98,32 +97,35 @@ def unstructure(arr, dtype=None, copy=False, casting='unsafe'):
     # finally is it safe to view the packed fields as the unstructured type
     return arr.view((out_dtype, (sum(counts),)))
 
-def load_dset(N10th=7, num_files=1, test_frac=0.25, mode='xy', start_file=0):
+def load_dset(N10th=7, file_frac=0.005, test_frac=0.25, mode='xy'):
     '''
     Load neutron tagging training and testing datasets into memory
+    file_frac controls the fraction of the file to use, in [0,1]
+    test_frac controls how much of the dataset should be used for testing
     Mode must be chosen from: 'xy','yx','x','y' to return either
     features, targets, or both, in a tuple (x_test, x_train, y_test, y_train).
     Omitting features can be useful to limit memory usage.
     '''
     if mode not in ['xy','yx','x','y']: raise ValueError("mode must be chosen from: 'xy','yx','x','y'")
-    files = [dset_location+'%03i.hdf5'%i for i in range(start_file, start_file+num_files)]
+    #files = [dset_location+'%03i.hdf5'%i for i in range(start_file, start_file+num_files)]
+    files = glob(dset_location + '*')
     x_test, x_train, y_test, y_train = [], [], [], []
     for fname in files:
         # Load data
         f = h5py.File(fname,'r')
         dset = f['sk2p2']
-
-        # Choose variables
-        myvars = tuple(varlist)
+        tot_entries = len(dset)
+        n_entries = int(np.ceil(file_frac * tot_entries))
+        dset = dset[:n_entries]
 
         # Preselection cut
         presel = dset["N10"]>=N10th
         # Build training and testing samples
-        frac_num = int(1./test_frac)
-        test, train = dset["event_num"]%frac_num==0, dset["event_num"]%frac_num!=0
+        test_frac_num = int(1./test_frac)
+        test, train = dset["event_num"]%test_frac_num==0, dset["event_num"]%test_frac_num!=0
         test, train = test & presel, train & presel
         if 'x' in mode:
-            x = dset[myvars]
+            x = dset[varlist]
             x_itest, x_itrain = x[test], x[train]
             # Remove ndarry structure, converting to unstructured float ndarray
             x_itest, x_itrain = unstructure(x_itest), unstructure(x_itrain)
@@ -173,18 +175,20 @@ class ntagGenerator(Sequence):
               'x' = features only
               'y' = targets only
     '''
-    def __init__(self, N10th=7, num_files=1, test_frac=0.25, batch_size=32, train=True, start_file=0, mode='xy'):
+    def __init__(self, N10th=7, file_frac=0.005, test_frac=0.25, batch_size=32, train=True, mode='xy'):
         '''
         Initialize generator
         '''
         if mode not in ['xy','yx','x','y']: raise ValueError("mode must be chosen from: 'xy','yx','x','y'")
         self.N10th = N10th
-        self.num_files = num_files
+        self.file_frac = file_frac
+        #self.num_files = num_files
         self.test_frac = test_frac
-        self.frac_num = int(1./self.test_frac)
+        self.test_frac_num = int(1./self.test_frac)
         self.batch_size = batch_size
         self.train = train
-        self.files = [dset_location+'%03i.hdf5'%i for i in range(start_file, start_file+num_files)]
+        #self.files = [dset_location+'%03i.hdf5'%i for i in range(start_file, start_file+num_files)]
+        self.files = glob(dset_location + '*')
         self.mode = mode
         self.lengths = [] # Number of entries for each data file
         self.indices = [] # Indices corresponding to valid entries after filtering, for each file
@@ -197,11 +201,14 @@ class ntagGenerator(Sequence):
         for fname in self.files:
             f = h5py.File(fname,'r') # Load data
             dset = f['sk2p2']
-            dset_indices = np.array(range(len(dset))) # Get indices
-
+            tot_entries = len(dset)
+            dset_indices = np.array(range(tot_entries)) # Get indices
+            n_entries = np.ceil(tot_entries * self.file_frac)
+            
+            select = dset_indices < n_entries # Only use file_frac of total file
             presel = dset["N10"]>=self.N10th  # Preselection cut
-            frac = (dset["event_num"]%self.frac_num!=0) if self.train else (dset["event_num"]%self.frac_num==0) # Select testing or training fraction
-            dset_indices = dset_indices[frac & presel] # Filtered indices, file-specific
+            frac = (dset["event_num"]%self.test_frac_num!=0) if self.train else (dset["event_num"]%self.test_frac_num==0) # Select testing or training fraction
+            dset_indices = dset_indices[select & frac & presel] # Filtered indices, file-specific
 
             self.lengths += [len(dset_indices)]  # number of entries in current file
             self.indices += [dset_indices]
