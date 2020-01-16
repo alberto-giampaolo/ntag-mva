@@ -1,21 +1,30 @@
 import threading as thr
 from sys import argv
+from glob import glob
 from queue import Queue
-from ROOT import TFile, TTree, TChain
+from ROOT import TFile, TTree, TChain, gSystem
 from array import array
+from math import isnan
+
 
 multithread=False
 max_threads = 3
 
-dir_in = "/data_CMS/cms/giampaolo/ntag-dset/root/shift0/"
-dir_out = "/data_CMS/cms/giampaolo/ntag-dset/root_flat/"
-start, stop = 103, 105 # Process files numbers [start, stop)
-tree_name = "sk2p2"
+# Load SKOFL libraries
+libs = glob("/home/llr/t2k/giampaolo/skroot/*.so")
+for ll in libs:
+    gSystem.Load(ll)
+
+dir_in  = "/data_CMS/cms/giampaolo/td-ntag-dset/root/"
+dir_out = "/data_CMS/cms/giampaolo/td-ntag-dset/root_flat/"
+#start, stop = 103, 105 # Process files numbers [start, stop)
+tree_name = "data"
 
 def flatten(rootfile_in, rootfile_out):
     t_in = TChain(tree_name) # Input tree
     t_in.Add(rootfile_in)
     entries = t_in.GetEntries()
+    run_no = int(rootfile_in.split('.')[-2])
 
     f = TFile( rootfile_out, 'recreate') # Output .root
     t = TTree( tree_name, 'Flattened tree with timing peaks') # Output tree
@@ -36,26 +45,25 @@ def flatten(rootfile_in, rootfile_out):
     var_types_to_flatten = { 
         # Dict of variables to flatten from input tree,
         # with their types ('i' for int, 'f' for float)
-        'N10':'i', 'N200':'i', 'N10d':'i',
+        'N10':'i', 'N10d':'i',
         'Nc':'i', 'Nback':'i', 'N300':'i','trms':'f', 'trmsdiff':'f', 'fpdist':'f',
-        'bpdist':'f', 'fwall':'f','bwall':'f','pvx':'f','pvy':'f','pvz':'f',
-        'bse':'f', 'mintrms_3':'f', 'mintrms_6':'f','Q10':'f', 'Qrms':'f', 'Qmean':'f',
-        'thetarms':'f','phirms':'f','thetam':'f','dt':'f','dtn':'f','ratio':'f',
-        'nvx':'f','nvy':'f','nvz':'f','tindex':'i','n40index':'i','Neff':'i',
+        'bpdist':'f', 'fwall':'f','bwall':'f',
+        'bse':'f', 'mintrms_3':'f', 'mintrms_6':'f','Qrms':'f', 'Qmean':'f',
+        'thetarms':'f','phirms':'f','thetam':'f','dt':'f',
 
-        'Nc1':'i','NhighQ':'i','NLowtheta':'i','NlowQ':'i','Nlow1':'i','Nlow2':'i',
+        'NhighQ':'i','NLowtheta':'i','Nlow1':'i','Nlow2':'i',
         'Nlow3':'i','Nlow4':'i','Nlow5':'i','Nlow6':'i','Nlow7':'i','Nlow8':'i',
         'Nlow9':'i'
     }
 
     var_types_to_copy = { 
         # Variables to copy without flattening (that are already flat)
-        'np':'i', 'N200M':'i', 'T200M':'f'
+        'np':'i',
     }
 
     var_types_to_calc = { 
         # Variables to calculate, not present in input tree
-        'event_num': 'i','is_signal': 'i','Nlow':'i'
+        'event_num': 'i','run_num':'i','is_signal': 'i','Nlow':'i',
     }
 
     # Merge dicts
@@ -68,8 +76,12 @@ def flatten(rootfile_in, rootfile_out):
     for vr in var_types:
         t.Branch( vr, var_arrays[vr], vr + '/' + var_types[vr].capitalize())
 
+    nans = 0
+    var_arrays['run_num'][0] = run_no
     for entry in range(entries):
+        if entry % 10000 == 0: print("Processed %d/%d" % (entry, entries))
         t_in.GetEntry(entry)
+        lowe = t_in.LOWE
         
         # Record primary event number to retain peak-grouping information
         var_arrays['event_num'][0] = entry
@@ -79,12 +91,21 @@ def flatten(rootfile_in, rootfile_out):
 
         # Flatten peak-level variables
         for p in range(var_arrays['np'][0]):
-            for vr in var_types_to_flatten: var_arrays[vr][0] = getattr(t_in, vr)[p]
+            try:
+                for vr in var_types_to_flatten: 
+                    in_val = getattr(t_in, vr)[p]
+
+                    if var_types[vr] == 'i' : in_val = int(in_val)
+                    var_arrays[vr][0] = in_val
+            except ValueError:
+                nans += 1
+                continue
 
             # Calculate Nlow
-            r2 = var_arrays['pvx'][0]**2 + var_arrays['pvy'][0]**2 
+            pvx, pvy, pvz = lowe.bsvertex[0], lowe.bsvertex[1], lowe.bsvertex[2]
+            r2 = pvx**2 + pvy**2 
             nlows = [var_arrays['Nlow%d'%i][0] for i in range(1,10)]
-            nlowid = get_low_id(r2, var_arrays['pvz'][0])
+            nlowid = get_low_id(r2, pvz)
             var_arrays['Nlow'][0] = nlows[nlowid]
 
             # Signal truth variable
@@ -95,18 +116,23 @@ def flatten(rootfile_in, rootfile_out):
     f.Write()
     f.Close()
     print("Flattened file: ", rootfile_in)
+    print("Found %d NaNs", nans)
 
 
 if __name__=='__main__':
 
-    try:
-        start, stop = int(argv[1]), int(argv[2])
-    except IndexError:
-        pass
-    print("Flattening files from number %i to %i" % (start, stop-1))
+    #try:
+    #    start, stop = int(argv[1]), int(argv[2])
+    #except IndexError:
+    #    pass
+    #print("Flattening files from number %i to %i" % (start, stop-1))
+    
 
-    rootfile_ins = [dir_in + "%03i.root"%i for i in range(start,stop)]
-    rootfile_outs = [dir_out + "%03i.root"%i for i in range(start,stop)]
+    #rootfile_ins = [dir_in + "%03i.root"%i for i in range(start,stop)]
+    #rootfile_outs = [dir_out + "%03i.root"%i for i in range(start,stop)]
+
+    rootfile_ins = glob(dir_in + '*')
+    rootfile_outs = [dir_out + fl.split('/')[-1] for fl in rootfile_ins]
 
     for rin,rout in zip(rootfile_ins,rootfile_outs):
         flatten(rin, rout)
