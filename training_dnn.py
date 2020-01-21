@@ -19,7 +19,6 @@ from metrics import plot_ROC_sigle, plot_ROC_sigle_gen
 
 N10TH = 7
 NFILES = 10
-STARTFILE = 0
 NEPOCHS = 2
 BATCH_SIZE = 256
 NLAYERS = 1

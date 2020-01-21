@@ -10,8 +10,7 @@ from keras import metrics
 from load_ntag import load_dset, save_model, ntagGenerator
 
 N10TH = 7
-NFILES = 200
-STARTFILE = 0
+NFILES = 50
 BATCH_SIZE = 256
 
 # Directory in which to save models and parameters (should exist inside the "models" directory)
@@ -64,7 +63,7 @@ if __name__ == '__main__':
     print("Starting training...")
     start_time = time.time()
     #ntag_model.fit(x_train,y_train, epochs=5, verbose=1)
-    ntag_history = ntag_model.fit_generator(train_gen, validation_data=test_gen,epochs=params['epochs'],verbose=1,use_multiprocessing=False, workers=0)
+    ntag_history = ntag_model.fit_generator(train_gen, validation_data=test_gen,epochs=params['epochs'],verbose=2,use_multiprocessing=False, workers=0)
     end_time = time.time()
     training_dt = end_time-start_time
     print("Trained model with ID "+model_name+" in %0.2f seconds" % training_dt)
