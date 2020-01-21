@@ -1,0 +1,9 @@
+*.pyc
+launch.json
+settings.json
+
+# Local tests
+models/polui_tests/*
+models/NN/test_search/*
+models/BDT/test_search/*
+models/BDT/bdt_testmodels/*
