@@ -17,6 +17,10 @@ for ll in libs:
 
 dir_in  = "/data_CMS/cms/giampaolo/td-ntag-dset/root/"
 dir_out = "/data_CMS/cms/giampaolo/td-ntag-dset/root_flat/"
+
+rootfile_ins = glob(dir_in + '*6338*')[102:]
+rootfile_outs = [dir_out + fl.split('/')[-1] for fl in rootfile_ins]
+
 #start, stop = 103, 105 # Process files numbers [start, stop)
 tree_name = "data"
 
@@ -76,10 +80,9 @@ def flatten(rootfile_in, rootfile_out):
     for vr in var_types:
         t.Branch( vr, var_arrays[vr], vr + '/' + var_types[vr].capitalize())
 
-    nans = 0
     var_arrays['run_num'][0] = run_no
     for entry in range(entries):
-        if entry % 10000 == 0: print("Processed %d/%d" % (entry, entries))
+        #if entry % 10000 == 0: print("Processed %d/%d" % (entry, entries))
         t_in.GetEntry(entry)
         lowe = t_in.LOWE
         
@@ -91,15 +94,13 @@ def flatten(rootfile_in, rootfile_out):
 
         # Flatten peak-level variables
         for p in range(var_arrays['np'][0]):
-            try:
-                for vr in var_types_to_flatten: 
-                    in_val = getattr(t_in, vr)[p]
+            for vr in var_types_to_flatten: 
+                in_val = getattr(t_in, vr)[p]
 
-                    if var_types[vr] == 'i' : in_val = int(in_val)
-                    var_arrays[vr][0] = in_val
-            except ValueError:
-                nans += 1
-                continue
+                if vr=='N10d' and isnan(in_val): in_val = 0 # Replace NaN N10d with 0s
+                if var_types[vr] == 'i' : in_val = int(in_val)
+                var_arrays[vr][0] = in_val
+
 
             # Calculate Nlow
             pvx, pvy, pvz = lowe.bsvertex[0], lowe.bsvertex[1], lowe.bsvertex[2]
@@ -116,13 +117,12 @@ def flatten(rootfile_in, rootfile_out):
     f.Write()
     f.Close()
     print("Flattened file: ", rootfile_in)
-    print("Found %d NaNs", nans)
 
 
 if __name__=='__main__':
 
     #try:
-    #    start, stop = int(argv[1]), int(argv[2])
+    #  start, stop = int(argv[1]), int(argv[2])
     #except IndexError:
     #    pass
     #print("Flattening files from number %i to %i" % (start, stop-1))
@@ -131,7 +131,8 @@ if __name__=='__main__':
     #rootfile_ins = [dir_in + "%03i.root"%i for i in range(start,stop)]
     #rootfile_outs = [dir_out + "%03i.root"%i for i in range(start,stop)]
 
-    rootfile_ins = glob(dir_in + '*')
+    if len(argv) == 2: 
+        rootfile_ins = [argv[1]]
     rootfile_outs = [dir_out + fl.split('/')[-1] for fl in rootfile_ins]
 
     for rin,rout in zip(rootfile_ins,rootfile_outs):
