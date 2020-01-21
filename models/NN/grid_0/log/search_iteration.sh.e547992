@@ -1,0 +1,15 @@
+Using TensorFlow backend.
+WARNING:tensorflow:From /opt/exp_soft/llr/python/3.6.6/el7/lib/python3.6/site-packages/tensorflow/python/ops/resource_variable_ops.py:435: colocate_with (from tensorflow.python.framework.ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Colocations handled automatically by placer.
+WARNING:tensorflow:From /opt/exp_soft/llr/python/3.6.6/el7/lib/python3.6/site-packages/tensorflow/python/ops/math_ops.py:3066: to_int32 (from tensorflow.python.ops.math_ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use tf.cast instead.
+/grid_mnt/vol__vol_U__u/llr/t2k/giampaolo/srn/ntag-mva/load_ntag.py:90: FutureWarning: Numpy has detected that you may be viewing or writing to an array returned by selecting multiple fields in a structured array. 
+
+This code may break in numpy 1.16 because this will return a view instead of a copy -- see release notes for details.
+  arr = arr.view(flattened_fields)
+/home/llr/t2k/giampaolo/.local/lib/python3.6/site-packages/keras/callbacks/callbacks.py:95: RuntimeWarning: Method (on_train_batch_end) is slow compared to the batch update (0.636660). Check your callbacks.
+  % (hook_name, delta_t_median), RuntimeWarning)
+/home/llr/t2k/giampaolo/.local/lib/python3.6/site-packages/keras/callbacks/callbacks.py:95: RuntimeWarning: Method (on_train_batch_end) is slow compared to the batch update (0.546779). Check your callbacks.
+  % (hook_name, delta_t_median), RuntimeWarning)

@@ -1,0 +1,29 @@
+Loaded parameter file: /home/llr/t2k/giampaolo/srn/ntag-mva/models/NN/grid_0/params/001.p
+Built NN with these hyperparameters:
+{'epochs': 10, 'dropout': 0.5, 'depth': 3, 'width': 133, 'learning_rate': 0.0028865875006213637, 'optimizer': 'adadelta'}
+Initializing dataset generators...
+Generators initialized
+Starting training...
+Epoch 1/10
+ - 2126s - loss: 1.5986 - accuracy: 0.8816 - auc_1: 0.6828 - val_loss: 0.1288 - val_accuracy: 0.9483 - val_auc_1: 0.7321
+Epoch 2/10
+ - 1951s - loss: 1.1758 - accuracy: 0.9079 - auc_1: 0.7440 - val_loss: 0.1175 - val_accuracy: 0.6754 - val_auc_1: 0.7110
+Epoch 3/10
+ - 2089s - loss: 1.0270 - accuracy: 0.9182 - auc_1: 0.7505 - val_loss: 0.1142 - val_accuracy: 0.6748 - val_auc_1: 0.7134
+Epoch 4/10
+ - 2081s - loss: 0.9010 - accuracy: 0.9265 - auc_1: 0.7531 - val_loss: 0.1146 - val_accuracy: 0.6779 - val_auc_1: 0.7093
+Epoch 5/10
+ - 1994s - loss: 1.0870 - accuracy: 0.9153 - auc_1: 0.7527 - val_loss: 0.1172 - val_accuracy: 0.6748 - val_auc_1: 0.7177
+Epoch 6/10
+ - 7707s - loss: 1.1124 - accuracy: 0.9139 - auc_1: 0.7531 - val_loss: 0.1154 - val_accuracy: 0.6785 - val_auc_1: 0.7114
+Epoch 7/10
+ - 10993s - loss: 0.8768 - accuracy: 0.9288 - auc_1: 0.7557 - val_loss: 0.1176 - val_accuracy: 0.6793 - val_auc_1: 0.7141
+Epoch 8/10
+ - 3132s - loss: 0.9728 - accuracy: 0.9229 - auc_1: 0.7554 - val_loss: 0.1181 - val_accuracy: 0.6775 - val_auc_1: 0.7116
+Epoch 9/10
+ - 8030s - loss: 0.9341 - accuracy: 0.9253 - auc_1: 0.7558 - val_loss: 0.1136 - val_accuracy: 0.6792 - val_auc_1: 0.7084
+Epoch 10/10
+ - 1860s - loss: 0.7498 - accuracy: 0.9370 - auc_1: 0.7580 - val_loss: 0.1129 - val_accuracy: 0.6786 - val_auc_1: 0.7123
+Trained model with ID 001 in 41971.21 seconds
+Saved model and training history to disk.
+All done!
