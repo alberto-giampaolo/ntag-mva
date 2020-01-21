@@ -63,7 +63,9 @@ def plot_ROC(x_test, y_test, models_names_n7=[], models_names_n8=[],
     plt.title('Neutron tagging performance')
     #ax.text(.05,.92,'Neutron tagging performance',horizontalalignment='left',transform=ax.transAxes, weight='bold')
 
-    if save_to: plt.savefig(save_to+'/'+save_name)
+    if save_to: 
+        plt.savefig(save_to+'/'+save_name)
+        plt.clf()
     else: plt.show()
 
 def plot_ROC_sigle(x_test, y_test, model, name, N10th, time_dep_test=False,SRN_scale=True):

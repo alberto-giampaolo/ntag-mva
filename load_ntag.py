@@ -145,12 +145,12 @@ def load_dset(N10th=7, file_frac=0.005, test_frac=0.25, mode='xy'):
     else: return y_test, y_train
 
 def load_model(model_name): return load(model_location + "%s.joblib" % model_name)
-def load_hist(model_name):
+def load_hist(model_name, subdir=''):
     try:
-        return load(model_location + "%s_hist.joblib" % model_name)
+        return load(model_location + subdir + "%s_hist.joblib" % model_name) # keras
     except FileNotFoundError:
         try:
-            return load_model(model_name).evals_result()
+            return load_model(model_name).evals_result() # xgboost
         except:
             raise FileNotFoundError("No training history found")
     
