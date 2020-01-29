@@ -7,9 +7,6 @@ from array import array
 from math import isnan
 
 
-multithread=False
-max_threads = 3
-
 # Load SKOFL libraries
 libs = glob("/home/llr/t2k/giampaolo/skroot/*.so")
 for ll in libs:
@@ -17,18 +14,14 @@ for ll in libs:
 
 dir_in  = "/data_CMS/cms/giampaolo/td-ntag-dset/root/"
 dir_out = "/data_CMS/cms/giampaolo/td-ntag-dset/root_flat/"
-
-rootfile_ins = glob(dir_in + '*6338*')[102:]
-rootfile_outs = [dir_out + fl.split('/')[-1] for fl in rootfile_ins]
-
-#start, stop = 103, 105 # Process files numbers [start, stop)
+rootfile_ins = glob(dir_in)
 tree_name = "data"
 
 def flatten(rootfile_in, rootfile_out):
     t_in = TChain(tree_name) # Input tree
     t_in.Add(rootfile_in)
     entries = t_in.GetEntries()
-    run_no = int(rootfile_in.split('.')[-2])
+    run_no = int(rootfile_in.split('.')[-3])
 
     f = TFile( rootfile_out, 'recreate') # Output .root
     t = TTree( tree_name, 'Flattened tree with timing peaks') # Output tree
@@ -101,8 +94,7 @@ def flatten(rootfile_in, rootfile_out):
                 if var_types[vr] == 'i' : in_val = int(in_val)
                 var_arrays[vr][0] = in_val
 
-
-            # Calculate Nlow
+            # Nlow
             pvx, pvy, pvz = lowe.bsvertex[0], lowe.bsvertex[1], lowe.bsvertex[2]
             r2 = pvx**2 + pvy**2 
             nlows = [var_arrays['Nlow%d'%i][0] for i in range(1,10)]
@@ -110,27 +102,22 @@ def flatten(rootfile_in, rootfile_out):
             var_arrays['Nlow'][0] = nlows[nlowid]
 
             # Signal truth variable
-            var_arrays['is_signal'][0] = abs(var_arrays['dt'][0] - 200.9e3) < 200
+            time = var_arrays['dt'][0]
+            try:
+                cap_time = t_in.timeCap[0] # True n catpture time
+            except IndexError:
+                # In absence of n capture on H, candidate peak is accidental
+                is_sig = False
+            else:
+                is_sig = abs(time - cap_time - 900.) < 200
+            var_arrays['is_signal'][0] = is_sig
 
             t.Fill()
-
     f.Write()
     f.Close()
     print("Flattened file: ", rootfile_in)
 
-
 if __name__=='__main__':
-
-    #try:
-    #  start, stop = int(argv[1]), int(argv[2])
-    #except IndexError:
-    #    pass
-    #print("Flattening files from number %i to %i" % (start, stop-1))
-    
-
-    #rootfile_ins = [dir_in + "%03i.root"%i for i in range(start,stop)]
-    #rootfile_outs = [dir_out + "%03i.root"%i for i in range(start,stop)]
-
     if len(argv) == 2: 
         rootfile_ins = [argv[1]]
     rootfile_outs = [dir_out + fl.split('/')[-1] for fl in rootfile_ins]

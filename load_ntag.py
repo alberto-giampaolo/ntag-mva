@@ -4,10 +4,10 @@ from glob import glob
 from joblib import load, dump
 from keras.utils import Sequence
 
-
 # polui
-dset_location = "/data_CMS/cms/giampaolo/ntag-dset/hdf5_flat/shift0/"
+dset_location = "/data_CMS/cms/giampaolo/td-ntag-dset/hdf5_flat/"
 model_location = "/home/llr/t2k/giampaolo/srn/ntag-mva/models/"
+tree_name = "data"
 
 # local Linux
 #dset_location = "/media/alberto/KINGSTON/Data/hdf5_flat/shift0/" # Directory of flattened (1 peak/entry) hdf5 files
@@ -19,6 +19,7 @@ model_location = "/home/llr/t2k/giampaolo/srn/ntag-mva/models/"
 varlist = '''N10 N10d Nc Nback N300 trms trmsdiff fpdist bpdist 
             fwall bwall bse mintrms_3 mintrms_6 Qrms Qmean 
             thetarms NLowtheta phirms thetam NhighQ Nlow '''.split()
+
 
 
 def get_fields_and_offsets(dt, offset=0):
@@ -113,7 +114,7 @@ def load_dset(N10th=7, file_frac=0.005, test_frac=0.25, mode='xy'):
     for fname in files:
         # Load data
         f = h5py.File(fname,'r')
-        dset = f['sk2p2']
+        dset = f[tree_name]
         tot_entries = len(dset)
         n_entries = int(np.ceil(file_frac * tot_entries))
         dset = dset[:n_entries]
@@ -200,7 +201,7 @@ class ntagGenerator(Sequence):
         '''
         for fname in self.files:
             f = h5py.File(fname,'r') # Load data
-            dset = f['sk2p2']
+            dset = f[tree_name]
             tot_entries = len(dset)
             dset_indices = np.array(range(tot_entries)) # Get indices
             n_entries = np.ceil(tot_entries * self.file_frac)
@@ -226,7 +227,7 @@ class ntagGenerator(Sequence):
         f = h5py.File(self.files[ifile],'r') # Load data file
 
         batch_indices = list(self.indices[ifile][istart:istop])
-        batch = f['sk2p2'][batch_indices] # Only load batch into memory
+        batch = f[tree_name][batch_indices] # Only load batch into memory
         
         x_batch, y_batch = batch[varlist], batch["is_signal"]
         x_batch = unstructure(x_batch) # Remove ndarry structure
