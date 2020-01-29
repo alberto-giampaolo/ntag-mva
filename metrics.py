@@ -138,6 +138,43 @@ def plot_ROC_sigle_gen(x_test_generator,y_test, model, name, N10th, time_dep_tes
     ax.text(.05,.92,'Neutron tagging performance',horizontalalignment='left',transform=ax.transAxes, weight='bold')
     plt.show()
 
+def plot_bdt_out(x_test, y_test, model, x_train=None, y_train=None, save_loc=''):
+    '''
+    Plot BDT ouput distribution for model on given test sample.
+    If given, also plot training distributions for overtraining check.
+    '''
+    plt.style.use("seaborn")
+    nbins = 20
+    edges = np.linspace(0,1,nbins+1)
+    width = edges[1]-edges[0]
+
+    ntag_pred = model.predict_proba(x_test)[:,1] 
+    ntag_pred_s, ntag_pred_b = ntag_pred[y_test==1], ntag_pred[y_test==0]
+    plt.hist([ntag_pred_b, ntag_pred_s], bins=edges, density= True, zorder=2,
+             label=["Accidental coincidences (Test set)", "True neutrons (Test set)"])
+
+    if x_train is not None and y_train is not None:
+        ntag_pred_tr = model.predict_proba(x_train)[:,1]
+        ntag_pred_tr_s, ntag_pred_tr_b = ntag_pred_tr[y_train==1], ntag_pred_tr[y_train==0]
+        hs, _, = np.histogram(ntag_pred_tr_s, bins=edges, density=True)
+        hb, _  = np.histogram(ntag_pred_tr_b, bins=edges, density=True)
+        plt.scatter(edges[:-1]+ width*0.25, hb, label="Accidental coincidences (Train set)", 
+                    edgecolors='k', zorder=3)
+        plt.scatter(edges[:-1]+ width*0.75, hs, label="True neutrons (Train set)", 
+                    edgecolors='k', zorder=3)
+
+    plt.xlabel('BDT Discriminant')
+    plt.ylabel('Events / (N * 0.05)')
+    plt.legend()
+    plt.yscale('log')
+
+    #ax.tick_params(axis="both",which='both', direction="in")
+
+    if save_loc: 
+        plt.savefig(save_loc)
+        plt.clf()
+    else: plt.show()
+
 def binary_logistic(y,y_pred):
     ''' Compute mean absolute errors
     for binary logistic errors '''

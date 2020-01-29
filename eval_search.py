@@ -6,13 +6,11 @@ from pickle import load as pload
 from load_ntag import load_hist
 from keras.metrics import AUC
 
-mode = 'NN' # BDT or NN (either xgboost or keras model evaluation)
 models_dir = "/home/llr/t2k/giampaolo/srn/ntag-mva/models/"
-grid_subdir = "NN/test_search/"
+grid_subdir = "BDT/grid_0_balanced/"
 grid_dir = models_dir + grid_subdir
 params_dir = grid_dir + "params/"
 
-if mode not in ['BDT', 'NN']: raise ValueError("Mode must be either BDT or NN")
 
 # Load models
 model_files = glob(grid_dir + "models/[0-9][0-9][0-9].joblib")
@@ -29,21 +27,15 @@ for pf, m in zip(param_files, models_all):
     except FileNotFoundError:
         continue
 
-if mode=='BDT':
-    # Testing set evaluation result of final iteration
-    mae = [m.evals_result()['validation_1']['mae'][-1] for m in models]
-    auc = [m.evals_result()['validation_1']['auc'][-1] for m in models]
-    # Sort with best models first
-    models_sorted = sorted(models,  key = lambda x: auc[models.index(x)], reverse=True)
-    params_sorted = sorted(params,  key = lambda x: auc[params.index(x)], reverse=True)
-    modelID_sorted = sorted(modelID,key = lambda x: auc[modelID.index(x)], reverse=True)
-    mae_sorted = sorted(mae,        key = lambda x: auc[mae.index(x)], reverse=True)
-    auc_sorted = sorted(auc, reverse=True)
-
-else:
-    auc = [load_hist(mid,subdir=grid_subdir+'models/') for mid in modelID]
-    pass
-
+# Testing set evaluation result of final iteration
+mae = [m.evals_result()['validation_1']['mae'][-1] for m in models]
+auc = [m.evals_result()['validation_1']['auc'][-1] for m in models]
+# Sort with best models first
+models_sorted = sorted(models,  key = lambda x: auc[models.index(x)], reverse=True)
+params_sorted = sorted(params,  key = lambda x: auc[params.index(x)], reverse=True)
+modelID_sorted = sorted(modelID,key = lambda x: auc[modelID.index(x)], reverse=True)
+mae_sorted = sorted(mae,        key = lambda x: auc[mae.index(x)], reverse=True)
+auc_sorted = sorted(auc, reverse=True)
 
 
 def rank():
@@ -52,6 +44,7 @@ def rank():
     print("**** Model Ranking ****")
     print("***********************")
     for mID, p, m, a in zip(modelID_sorted, params_sorted, mae_sorted, auc_sorted):
+        if n > 200: break
         print("")
         print("(%d) [ID = %s] AUC = %f | MAE = %f"% (n,mID,a,m))
         print(p)
@@ -97,8 +90,8 @@ def plot_bdt_mae():
         plt.plot(range(len(maes)), maes, label=modelID_sorted[:10][i])
 
     plt.style.use("seaborn")
-    plt.yscale("log")
-    plt.ylim(0.035,0.04)
+    plt.yscale("linear")
+    plt.ylim(0.032,0.04)
     plt.legend()
     plt.xlabel("Training iteration")
     plt.ylabel('Mean Absolute Error (Test dataset)')
@@ -112,7 +105,7 @@ def plot_bdt_auc():
 
     plt.style.use("seaborn")
     plt.yscale("linear")
-    plt.ylim(0.982, 0.986)
+    plt.ylim(0.984, 0.988)
     plt.legend()
     plt.xlabel("Training iteration")
     plt.ylabel('AUC (Test dataset)')
