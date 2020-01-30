@@ -7,16 +7,17 @@ from load_ntag import load_hist
 from keras.metrics import AUC
 
 models_dir = "/home/llr/t2k/giampaolo/srn/ntag-mva/models/"
-grid_subdir = "BDT/grid_0_balanced/"
+grid_subdir = "BDT/grid_0_td/"
 grid_dir = models_dir + grid_subdir
 params_dir = grid_dir + "params/"
 
 
-# Load models
+print("Loading models...")
 model_files = glob(grid_dir + "models/[0-9][0-9][0-9].joblib")
 models_all = [jload(m) for m in model_files]
 mnames = [m.split('/')[-1].split('.')[-2] for m in model_files]
 param_files = [params_dir + '/' + mn + '.p' for mn in mnames]
+print("Loading parameter files...")
 models, params, modelID = [], [], []
 for pf, m in zip(param_files, models_all):
     try:
@@ -27,6 +28,7 @@ for pf, m in zip(param_files, models_all):
     except FileNotFoundError:
         continue
 
+print("Sorting models...")
 # Testing set evaluation result of final iteration
 mae = [m.evals_result()['validation_1']['mae'][-1] for m in models]
 auc = [m.evals_result()['validation_1']['auc'][-1] for m in models]
@@ -105,7 +107,7 @@ def plot_bdt_auc():
 
     plt.style.use("seaborn")
     plt.yscale("linear")
-    plt.ylim(0.984, 0.988)
+    plt.ylim(0.9775, 0.9850)
     plt.legend()
     plt.xlabel("Training iteration")
     plt.ylabel('AUC (Test dataset)')
