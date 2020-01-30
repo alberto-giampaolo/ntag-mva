@@ -8,11 +8,11 @@ with warnings.catch_warnings():  # Clean up output
     from load_ntag import load_dset, save_model
 
 N10TH = 7
-NFILES = 50
+NFILES = 4
 NTHREADS = -1 # Automatically make use of max cores (test)
 
 # Directory in which to save models and parameters (should exist inside the "models" directory)
-grid_location = 'BDT/grid_0_extend_066_fast/'
+grid_location = 'BDT/grid_0_top_td/'
 
 try:
     param_file = sys.argv[1]
@@ -25,6 +25,10 @@ model_name = param_file.split("/")[-1].split('.')[-2] # model has same name as p
 print("Loading dataset...")
 x_test, x_train, y_test, y_train = load_dset(N10TH,file_frac=NFILES/200., test_frac=0.25)
 
+count_pos = sum(y_train)
+count_neg = len(y_train) - count_pos
+balance_weight = float(count_neg) / count_pos
+
 print("Training BDT")
 # Define neutron tagging model and start training
 with open(param_file, 'rb') as fl:
@@ -36,7 +40,9 @@ ntag_model = XGBClassifier(learning_rate=params['learning_rate'],
                           early_stopping_rounds=500,
                           subsample=params['subsample'],
                           verbosity=1,
-                          nthread=NTHREADS)
+                          nthread=NTHREADS,
+                          #scale_pos_weight=balance_weight
+                          )
 print('Built BDT with these hyperparameters:')
 print(params)
 
