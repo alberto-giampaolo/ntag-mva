@@ -5,9 +5,10 @@ from joblib import load, dump
 from keras.utils import Sequence
 
 # polui
-dset_location = "/data_CMS/cms/giampaolo/td-ntag-dset/hdf5_flat/"
+# dset_location = "/data_CMS/cms/giampaolo/mc/td-ntag-dset-lowN10/hdf5_flat/" # No DN cut
+dset_location = "/data_CMS/cms/giampaolo/mc/darknoise/hdf5_flat/" # DN cut
 model_location = "/home/llr/t2k/giampaolo/srn/ntag-mva/models/"
-tree_name = "data"
+tree_name = "sk2p2"
 
 # local Linux
 #dset_location = "/media/alberto/KINGSTON/Data/hdf5_flat/shift0/" # Directory of flattened (1 peak/entry) hdf5 files
@@ -18,7 +19,7 @@ tree_name = "data"
 
 varlist = '''N10 N10d Nc Nback N300 trms trmsdiff fpdist bpdist 
             fwall bwall bse mintrms_3 mintrms_6 Qrms Qmean 
-            thetarms NLowtheta phirms thetam NhighQ Nlow '''.split()
+            thetarms NLowtheta phirms thetam NhighQ Nlow'''.split()
 
 
 
@@ -98,26 +99,33 @@ def unstructure(arr, dtype=None, copy=False, casting='unsafe'):
     # finally is it safe to view the packed fields as the unstructured type
     return arr.view((out_dtype, (sum(counts),)))
 
-def load_dset(N10th=7, file_frac=0.005, test_frac=0.25, mode='xy'):
+def load_dset(N10th=7, file_frac=0.005, test_frac=0.25, mode='xy', file_start=0.0, run=None):
     '''
-    Load neutron tagging training and testing datasets into memory
-    file_frac controls the fraction of the file to use, in [0,1]
-    test_frac controls how much of the dataset should be used for testing
+    Load neutron tagging training and testing datasets into memory.
+    file_frac controls the fraction of the file to use, in [0,1].
+    test_frac controls how much of the dataset should be used for testing.
     Mode must be chosen from: 'xy','yx','x','y' to return either
     features, targets, or both, in a tuple (x_test, x_train, y_test, y_train).
     Omitting features can be useful to limit memory usage.
+    file_start is the file fraction at which to start loading entries,
+    e.g. 0.5 to start in the middle
     '''
     if mode not in ['xy','yx','x','y']: raise ValueError("mode must be chosen from: 'xy','yx','x','y'")
     #files = [dset_location+'%03i.hdf5'%i for i in range(start_file, start_file+num_files)]
-    files = glob(dset_location + '*')
+    if run:
+        files = glob(dset_location + '*r'+ str(int(run)) + '*')
+    else:
+        files = glob(dset_location + '*')
     x_test, x_train, y_test, y_train = [], [], [], []
     for fname in files:
         # Load data
         f = h5py.File(fname,'r')
         dset = f[tree_name]
         tot_entries = len(dset)
+        if tot_entries == 0: continue
         n_entries = int(np.ceil(file_frac * tot_entries))
-        dset = dset[:n_entries]
+        n_start = int(np.floor(file_start * tot_entries))
+        dset = dset[n_start : n_start + n_entries]
 
         # Preselection cut
         presel = dset["N10"]>=N10th
@@ -128,7 +136,7 @@ def load_dset(N10th=7, file_frac=0.005, test_frac=0.25, mode='xy'):
         if 'x' in mode:
             x = dset[varlist]
             x_itest, x_itrain = x[test], x[train]
-            # Remove ndarry structure, converting to unstructured float ndarray
+            # Remove ndarray structure, converting to unstructured float ndarray
             x_itest, x_itrain = unstructure(x_itest), unstructure(x_itrain)
             x_test += [x_itest]
             x_train += [x_itrain]
