@@ -2,26 +2,33 @@ import threading as thr
 from sys import argv
 from glob import glob
 from queue import Queue
-from ROOT import TFile, TTree, TChain, gSystem
+from ROOT import TFile, TTree, TChain, gSystem #pylint: disable=no-name-in-module
 from array import array
 from math import isnan
-
 
 # Load SKOFL libraries
 libs = glob("/home/llr/t2k/giampaolo/skroot/*.so")
 for ll in libs:
     gSystem.Load(ll)
 
-dir_in  = "/data_CMS/cms/giampaolo/td-ntag-dset/root/"
-dir_out = "/data_CMS/cms/giampaolo/td-ntag-dset/root_flat/"
+dir_in  = "/data_CMS/cms/giampaolo/mc/darknoise/root/"
+dir_out = "/data_CMS/cms/giampaolo/mc/darknoise/root_flat/"
 rootfile_ins = glob(dir_in)
-tree_name = "data"
+tree_name = "sk2p2"
 
-def flatten(rootfile_in, rootfile_out):
+# Trees with additional data on same events
+dir_in2 = "/data_CMS/cms/giampaolo/mc/td-ntag-dset-lowN10/root/mc_truth"
+rootfile_ins2 = glob(dir_in2)
+tree_name2 = "skmc"
+
+def flatten(rootfile_in, rootfile_out, rootfile_in2=None):
     t_in = TChain(tree_name) # Input tree
     t_in.Add(rootfile_in)
+    run_no = int(rootfile_in.split('.')[-3][1:])   # Run #, CHANGE DEPENDING ON FILE NAMING SCHEME
     entries = t_in.GetEntries()
-    run_no = int(rootfile_in.split('.')[-3])
+
+    if rootfile_in2:
+        t_in.AddFriend(tree_name2, rootfile_in2)
 
     f = TFile( rootfile_out, 'recreate') # Output .root
     t = TTree( tree_name, 'Flattened tree with timing peaks') # Output tree
@@ -50,7 +57,10 @@ def flatten(rootfile_in, rootfile_out):
 
         'NhighQ':'i','NLowtheta':'i','Nlow1':'i','Nlow2':'i',
         'Nlow3':'i','Nlow4':'i','Nlow5':'i','Nlow6':'i','Nlow7':'i','Nlow8':'i',
-        'Nlow9':'i'
+        'Nlow9':'i',
+
+        'goodness_neutron':'f','goodness_prompt':'f','goodness_window':'f',
+        'goodness_combined':'f'
     }
 
     var_types_to_copy = { 
@@ -89,9 +99,9 @@ def flatten(rootfile_in, rootfile_out):
         for p in range(var_arrays['np'][0]):
             for vr in var_types_to_flatten: 
                 in_val = getattr(t_in, vr)[p]
-
                 if vr=='N10d' and isnan(in_val): in_val = 0 # Replace NaN N10d with 0s
                 if var_types[vr] == 'i' : in_val = int(in_val)
+                
                 var_arrays[vr][0] = in_val
 
             # Nlow
@@ -118,9 +128,18 @@ def flatten(rootfile_in, rootfile_out):
     print("Flattened file: ", rootfile_in)
 
 if __name__=='__main__':
-    if len(argv) == 2: 
-        rootfile_ins = [argv[1]]
-    rootfile_outs = [dir_out + fl.split('/')[-1] for fl in rootfile_ins]
 
-    for rin,rout in zip(rootfile_ins,rootfile_outs):
-        flatten(rin, rout)
+    # For parallel flattening on cluster
+    if len(argv) == 3: 
+        rootfile_ins = [argv[1]]
+        rootfile_ins2 = [argv[2]]
+    elif len(argv) == 2: 
+        rootfile_ins = [argv[1]]
+    
+    rootfile_outs = [dir_out + fl.split('/')[-1] for fl in rootfile_ins]
+    if len(argv) == 2:
+        for rin, rout in zip(rootfile_ins, rootfile_outs):
+            flatten(rin, rout)
+    else:
+        for rin, rout, rin2 in zip(rootfile_ins, rootfile_outs, rootfile_ins2):
+            flatten(rin, rout, rin2)
