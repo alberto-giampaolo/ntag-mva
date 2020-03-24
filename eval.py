@@ -2,20 +2,24 @@ from os import environ, devnull
 environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # Suppress avalanche of tensorflow info outputs
 
 from numpy import array
+import matplotlib
+matplotlib.use('pdf')
 import matplotlib.pyplot as plt 
 from load_ntag import load_dset, load_model, load_hist
-from metrics import plot_ROC, plot_loss, plot_loss_hist, bdt_importance, bdt_importance_rank, plot_bdt_out
+from metrics import plot_ROC, plot_ROC_td, plot_ROC_td_dn, plot_loss, plot_loss_hist, bdt_importance, bdt_importance_rank, plot_bdt_out
 
-model_name = 'BDT/grid_0_200k/models/083' # For single model plotting
+model_name = 'BDT/n10thr6_051_500k_dn2/051' # For single model plotting
 model_names = [model_name] # For plotting more than one ROC at the same time
-save_to = '/home/llr/t2k/giampaolo/srn/ntag-mva/models/BDT/grid_0_200k/plots'
+save_to = '/home/llr/t2k/giampaolo/srn/ntag-mva/models/BDT/n10thr6_051_500k_dn2'
 fname = model_name.split('/')[-1]
 fnames = [mn.split('/')[-1] for mn in model_names]
 
-evaluate_on_test = True # Whether to plot ROC and output distributions on test dataset
-N10TH = 7 # N10 Threshold
-NFILES = 50 # Number of datafiles to use (50,000 events/file, maximum 200 files)
 
+
+evaluate_on_test = True # Whether to plot ROC and output distributions on test dataset
+N10TH = 6 # N10 Threshold
+NFILES = 200 # Number of datafiles to use (50,000 events/file, maximum 200 files)
+NFILES_TRAIN = 10
 
 # Load models
 print("Loading model(s)")
@@ -25,13 +29,12 @@ if evaluate_on_test:
     # Load test datasets
     print("Loading test set")
     x_test, _, y_test, _ = load_dset(N10TH,file_frac=NFILES/200.)
-    _, x_train, _, y_train = load_dset(N10TH, file_frac=4./200.)
+    _, x_train, _, y_train = load_dset(N10TH, file_frac=NFILES_TRAIN/200.)
 
     # Plot ROC curve
     print("Plotting performance (ROC)")
-    plot_ROC(x_test,y_test,models_names_n7=zip(ntag_models,model_names), 
+    plot_ROC_td_dn(x_test,y_test,models_names_n6=zip(ntag_models,['BDT (N10>5, dark noise cut)']), 
             save_to=save_to, save_name='_'.join(fnames)+'.pdf', TMVA=True)
-
 
     # Plot BDT output distribution
     print("Plotting BDT discriminant")

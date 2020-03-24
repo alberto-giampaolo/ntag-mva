@@ -3,11 +3,12 @@ import matplotlib.pyplot as plt
 from pickle import load
 from sklearn.metrics import roc_curve
 from xgboost import plot_importance
-from scalings import *
+from scalings import * # pylint: disable=unused-wildcard-import
 from load_ntag import varlist
 
 
-def plot_ROC(x_test, y_test, models_names_n7=[], models_names_n8=[],
+def plot_ROC(x_test, y_test,
+             models_names_n7=[], models_names_n8=[],
              SRN_scale=True, save_to=None, save_name="", TMVA=False):
     '''
     Plot ROC curves for list of models on the testing dataset x_test,y_test.
@@ -41,11 +42,11 @@ def plot_ROC(x_test, y_test, models_names_n7=[], models_names_n8=[],
         with open("/home/llr/t2k/giampaolo/srn/ntag-mva/models/tmva/n10thr7_nolr", 'rb') as fl:
             ntag_tp, ntag_tn = load(fl)
             ntag_tp, ntag_tn = np.array(ntag_tp), np.array(ntag_tn)
-        with open("/home/llr/t2k/giampaolo/srn/ntag-mva/models/tmva/n10thr7_opt_nolr", 'rb') as fl:
-            ntag_opt_tp, ntag_opt_tn = load(fl)
-            ntag_opt_tp, ntag_opt_tn = np.array(ntag_opt_tp), np.array(ntag_opt_tn)
+        # with open("/home/llr/t2k/giampaolo/srn/ntag-mva/models/tmva/n10thr7_opt_nolr", 'rb') as fl:
+        #     ntag_opt_tp, ntag_opt_tn = load(fl)
+        #     ntag_opt_tp, ntag_opt_tn = np.array(ntag_opt_tp), np.array(ntag_opt_tn)
         plt.plot(pre_eff*ntag_tp,bg_ev*(1-ntag_tn),label='BDT (TMVA)', linewidth=1)
-        plt.plot(pre_eff*ntag_opt_tp,bg_ev*(1-ntag_opt_tn),label='BDT (TMVA, optimized)', linewidth=1)
+        # plt.plot(pre_eff*ntag_opt_tp,bg_ev*(1-ntag_opt_tn),label='BDT (TMVA, optimized)', linewidth=1)
 
     plt.xlabel('Signal efficiency')
     plt.ylabel('Accidental coincidences/event')
@@ -55,7 +56,7 @@ def plot_ROC(x_test, y_test, models_names_n7=[], models_names_n8=[],
     plt.ylim(0.00001,1.5)
     plt.grid(which='both')
     ax.tick_params(axis="both",which='both', direction="in")
-    ax.set_facecolor('beige')
+    #ax.set_facecolor('beige')
     plt.title('Neutron tagging performance')
     #ax.text(.05,.92,'Neutron tagging performance',horizontalalignment='left',transform=ax.transAxes, weight='bold')
 
@@ -64,28 +65,40 @@ def plot_ROC(x_test, y_test, models_names_n7=[], models_names_n8=[],
         plt.clf()
     else: plt.show()
 
-def plot_ROC_td(x_test, y_test, models_names_n7=[], models_names_n8=[],
+def plot_ROC_td(x_test, y_test, 
+                models_names_n5=[],models_names_n6=[], models_names_n7=[],models_names_n8=[],
                 SRN_scale=True, save_to=None, save_name="", TMVA=False):
     '''
     Plot ROC curves, for time dependent test set 
     '''
+    plt.style.use("seaborn")
     _, ax = plt.subplots()
+
+    for model, name in models_names_n5:
+        pre_eff, bg_ev = (pre_eff4_td_srn, bg_per_ev4_td_srn) if SRN_scale else (pre_eff4_td, bg_per_ev4_td)
+        
+        ntag_pred = model.predict_proba(x_test)[:,1]
+        ntag_fp, ntag_tp, _ = roc_curve(y_test,ntag_pred)
+        plt.plot(pre_eff*ntag_tp,bg_ev*ntag_fp,label=name, linewidth=1)
+
+    for model, name in models_names_n6:
+        pre_eff, bg_ev = (pre_eff5_td_srn, bg_per_ev5_td_srn) if SRN_scale else (pre_eff5_td, bg_per_ev5_td)
+        
+        ntag_pred = model.predict_proba(x_test)[:,1]
+        ntag_fp, ntag_tp, _ = roc_curve(y_test,ntag_pred)
+        plt.plot(pre_eff*ntag_tp,bg_ev*ntag_fp,label=name, linewidth=1)
 
     for model, name in models_names_n7:
         pre_eff, bg_ev = (pre_eff6_td_srn, bg_per_ev6_td_srn) if SRN_scale else (pre_eff6_td, bg_per_ev6_td)
-        try:
-            ntag_pred = model.predict_proba(x_test)[:,1]
-        except IndexError:
-            ntag_pred = model.predict(x_test)
+        
+        ntag_pred = model.predict_proba(x_test)[:,1]
         ntag_fp, ntag_tp, _ = roc_curve(y_test,ntag_pred)
         plt.plot(pre_eff*ntag_tp,bg_ev*ntag_fp,label=name, linewidth=1)
 
     for model, name in models_names_n8:
         pre_eff, bg_ev = (pre_eff7_td_srn, bg_per_ev7_td_srn) if SRN_scale else (pre_eff7_td, bg_per_ev7_td)
-        try:
-            ntag_pred = model.predict_proba(x_test)[:,1]
-        except IndexError:
-            ntag_pred = model.predict(x_test)
+        
+        ntag_pred = model.predict_proba(x_test)[:,1]
         ntag_fp, ntag_tp, _ = roc_curve(y_test,ntag_pred)
         plt.plot(pre_eff*ntag_tp,bg_ev*ntag_fp,label=name, linewidth=1)
 
@@ -94,21 +107,57 @@ def plot_ROC_td(x_test, y_test, models_names_n7=[], models_names_n8=[],
         with open("/home/llr/t2k/giampaolo/srn/ntag-mva/models/tmva/n10thr7_nolr_sk4", 'rb') as fl:
             ntag_tp, ntag_tn = load(fl)
             ntag_tp, ntag_tn = np.array(ntag_tp), np.array(ntag_tn)
-        with open("/home/llr/t2k/giampaolo/srn/ntag-mva/models/tmva/n10thr7_opt_nolr_sk4", 'rb') as fl:
-            ntag_opt_tp, ntag_opt_tn = load(fl)
-            ntag_opt_tp, ntag_opt_tn = np.array(ntag_opt_tp), np.array(ntag_opt_tn)
-        plt.plot(pre_eff*ntag_tp,bg_ev*(1-ntag_tn),label='BDT (TMVA)', linewidth=1)
-        plt.plot(pre_eff*ntag_opt_tp,bg_ev*(1-ntag_opt_tn),label='BDT (TMVA, optimized)', linewidth=1)
+        plt.plot(pre_eff*ntag_tp,bg_ev*(1-ntag_tn),label='Current BDT (N10 > 6)', linewidth=1)
 
     plt.xlabel('Signal efficiency')
     plt.ylabel('Accidental coincidences/event')
     plt.legend(frameon=False, loc="best")
     plt.yscale('log')
-    plt.xlim(0.05,0.45)
-    plt.ylim(0.00001,1.5)
-    plt.grid(which='both')
+    plt.xlim(0.05,0.8)
+    plt.ylim(0.00001,100)
+    plt.grid(which='minor')
     ax.tick_params(axis="both",which='both', direction="in")
-    ax.set_facecolor('beige')
+    #ax.set_facecolor('beige')
+    plt.title('Neutron tagging performance')
+    #ax.text(.05,.92,'Neutron tagging performance',horizontalalignment='left',transform=ax.transAxes, weight='bold')
+
+    if save_to: 
+        plt.savefig(save_to+'/'+save_name)
+        plt.clf()
+    else: plt.show()
+
+def plot_ROC_td_dn(x_test, y_test, 
+                models_names_n6=[],
+                SRN_scale=True, save_to=None, save_name="", TMVA=False):
+    '''
+    Plot ROC curves, for time dependent test set with dark noise cut
+    '''
+    plt.style.use("seaborn")
+    _, ax = plt.subplots()
+
+    for model, name in models_names_n6:
+        pre_eff, bg_ev = (pre_eff5_td_dn_srn, bg_per_ev5_td_dn_srn) if SRN_scale else (pre_eff5_td_dn, bg_per_ev5_td_dn)
+        
+        ntag_pred = model.predict_proba(x_test)[:,1]
+        ntag_fp, ntag_tp, _ = roc_curve(y_test,ntag_pred)
+        plt.plot(pre_eff*ntag_tp,bg_ev*ntag_fp,label=name, linewidth=1)
+
+    if TMVA:
+        pre_eff, bg_ev = (pre_eff6_td_srn, bg_per_ev6_td_srn) if SRN_scale else (pre_eff6_td,bg_per_ev6_td)
+        with open("/home/llr/t2k/giampaolo/srn/ntag-mva/models/tmva/n10thr7_nolr_sk4", 'rb') as fl:
+            ntag_tp, ntag_tn = load(fl)
+            ntag_tp, ntag_tn = np.array(ntag_tp), np.array(ntag_tn)
+        plt.plot(pre_eff*ntag_tp,bg_ev*(1-ntag_tn),label='Current BDT (N10 > 6)', linewidth=1)
+
+    plt.xlabel('Signal efficiency')
+    plt.ylabel('Accidental coincidences/event')
+    plt.legend(frameon=False, loc="best")
+    plt.yscale('log')
+    plt.xlim(0.05,0.8)
+    plt.ylim(0.00001,100)
+    plt.grid(which='minor')
+    ax.tick_params(axis="both",which='both', direction="in")
+    #ax.set_facecolor('beige')
     plt.title('Neutron tagging performance')
     #ax.text(.05,.92,'Neutron tagging performance',horizontalalignment='left',transform=ax.transAxes, weight='bold')
 
