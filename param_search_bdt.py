@@ -1,11 +1,12 @@
 import time
 import sys
-import warnings   
+# import warnings   
 from pickle import load
 from xgboost import XGBClassifier
-with warnings.catch_warnings():  # Clean up output
-    warnings.filterwarnings("ignore",category=FutureWarning)
-    from load_ntag import load_dset, save_model
+# with warnings.catch_warnings():  # Clean up output
+#     warnings.filterwarnings("ignore",category=FutureWarning)
+#     from load_ntag import load_dset, save_model
+from load_ntag import load_dset, save_model
 
 N10TH = 6
 NFILES = 200. # 50k events / file

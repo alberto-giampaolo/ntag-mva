@@ -3,7 +3,7 @@ import h5py
 import scalings
 from glob import glob
 from joblib import load, dump
-from keras.utils import Sequence
+# from keras.utils import Sequence
 
 # polui
 # dset_location = "/data_CMS/cms/giampaolo/mc/td-ntag-dset-lowN10/hdf5_flat/" # No DN cut
@@ -219,101 +219,101 @@ def is_invalid(array):
     isi = np.isinf(array)
     return np.any(np.logical_or(isn,isi))
 
-class ntagGenerator(Sequence):
-    '''
-    Generate training or testing set in batches
-    to speed up GPU performance and handle 
-    larger-than-memory datasets
-    for training / testing (train=True/False)
-    Mode:     'xy'= each batch contains (features, targets)
-              'x' = features only
-              'y' = targets only
-    '''
-    def __init__(self, N10th=7, file_frac=0.005, test_frac=0.25, batch_size=32, train=True, mode='xy'):
-        '''
-        Initialize generator
-        '''
-        if mode not in ['xy','yx','x','y']: raise ValueError("mode must be chosen from: 'xy','yx','x','y'")
-        self.N10th = N10th
-        self.file_frac = file_frac
-        #self.num_files = num_files
-        self.test_frac = test_frac
-        self.test_frac_num = int(1./self.test_frac)
-        self.batch_size = batch_size
-        self.train = train
-        #self.files = [dset_location+'%03i.hdf5'%i for i in range(start_file, start_file+num_files)]
-        self.files = glob(dset_location + '*')
-        self.mode = mode
-        self.lengths = [] # Number of entries for each data file
-        self.indices = [] # Indices corresponding to valid entries after filtering, for each file
-        self.__filter()
+# class ntagGenerator(Sequence):
+#     '''
+#     Generate training or testing set in batches
+#     to speed up GPU performance and handle 
+#     larger-than-memory datasets
+#     for training / testing (train=True/False)
+#     Mode:     'xy'= each batch contains (features, targets)
+#               'x' = features only
+#               'y' = targets only
+#     '''
+#     def __init__(self, N10th=7, file_frac=0.005, test_frac=0.25, batch_size=32, train=True, mode='xy'):
+#         '''
+#         Initialize generator
+#         '''
+#         if mode not in ['xy','yx','x','y']: raise ValueError("mode must be chosen from: 'xy','yx','x','y'")
+#         self.N10th = N10th
+#         self.file_frac = file_frac
+#         #self.num_files = num_files
+#         self.test_frac = test_frac
+#         self.test_frac_num = int(1./self.test_frac)
+#         self.batch_size = batch_size
+#         self.train = train
+#         #self.files = [dset_location+'%03i.hdf5'%i for i in range(start_file, start_file+num_files)]
+#         self.files = glob(dset_location + '*')
+#         self.mode = mode
+#         self.lengths = [] # Number of entries for each data file
+#         self.indices = [] # Indices corresponding to valid entries after filtering, for each file
+#         self.__filter()
 
-    def __filter(self):
-        '''
-        Apply cuts and select training/testing set
-        '''
-        for fname in self.files:
-            f = h5py.File(fname,'r') # Load data
-            dset = f[tree_name]
-            tot_entries = len(dset)
-            dset_indices = np.array(range(tot_entries)) # Get indices
-            n_entries = np.ceil(tot_entries * self.file_frac)
+#     def __filter(self):
+#         '''
+#         Apply cuts and select training/testing set
+#         '''
+#         for fname in self.files:
+#             f = h5py.File(fname,'r') # Load data
+#             dset = f[tree_name]
+#             tot_entries = len(dset)
+#             dset_indices = np.array(range(tot_entries)) # Get indices
+#             n_entries = np.ceil(tot_entries * self.file_frac)
             
-            select = dset_indices < n_entries # Only use file_frac of total file
-            presel = dset["N10"]>=self.N10th  # Preselection cut
-            frac = (dset["event_num"]%self.test_frac_num!=0) if self.train else (dset["event_num"]%self.test_frac_num==0) # Select testing or training fraction
-            dset_indices = dset_indices[select & frac & presel] # Filtered indices, file-specific
+#             select = dset_indices < n_entries # Only use file_frac of total file
+#             presel = dset["N10"]>=self.N10th  # Preselection cut
+#             frac = (dset["event_num"]%self.test_frac_num!=0) if self.train else (dset["event_num"]%self.test_frac_num==0) # Select testing or training fraction
+#             dset_indices = dset_indices[select & frac & presel] # Filtered indices, file-specific
 
-            self.lengths += [len(dset_indices)]  # number of entries in current file
-            self.indices += [dset_indices]
+#             self.lengths += [len(dset_indices)]  # number of entries in current file
+#             self.indices += [dset_indices]
 
-            f.close()
-        self.l_tot = np.sum(self.lengths) # Total number of entries
+#             f.close()
+#         self.l_tot = np.sum(self.lengths) # Total number of entries
 
 
-    def __len__(self):
-        '''Number of batches'''
-        return int( np.ceil( self.l_tot / float(self.batch_size) ) )
+#     def __len__(self):
+#         '''Number of batches'''
+#         return int( np.ceil( self.l_tot / float(self.batch_size) ) )
 
-    def __generate_batch(self, ifile, istart, istop):
-        ''' Generate 1 batch of data'''
-        f = h5py.File(self.files[ifile],'r') # Load data file
+#     def __generate_batch(self, ifile, istart, istop):
+#         ''' Generate 1 batch of data'''
+#         f = h5py.File(self.files[ifile],'r') # Load data file
 
-        batch_indices = list(self.indices[ifile][istart:istop])
-        batch = f[tree_name][batch_indices] # Only load batch into memory
+#         batch_indices = list(self.indices[ifile][istart:istop])
+#         batch = f[tree_name][batch_indices] # Only load batch into memory
         
-        x_batch, y_batch = batch[varlist], batch["is_signal"]
-        x_batch = unstructure(x_batch) # Remove ndarry structure
-        if is_invalid(x_batch): raise ValueError("Invalid value found in a batch from file %d"%ifile)
+#         x_batch, y_batch = batch[varlist], batch["is_signal"]
+#         x_batch = unstructure(x_batch) # Remove ndarry structure
+#         if is_invalid(x_batch): raise ValueError("Invalid value found in a batch from file %d"%ifile)
 
-        if 'x' in self.mode and 'y' in self.mode: return x_batch, y_batch
-        elif self.mode == 'x': return x_batch
-        else: return y_batch
+#         if 'x' in self.mode and 'y' in self.mode: return x_batch, y_batch
+#         elif self.mode == 'x': return x_batch
+#         else: return y_batch
 
-    def __getitem__(self, idx):
-        '''Get batch of data number idx'''
-        istart, istop = idx*self.batch_size, (idx+1)*self.batch_size
-        if istop > self.l_tot: istop = self.l_tot # Resize the last batch
+#     def __getitem__(self, idx):
+#         '''Get batch of data number idx'''
+#         istart, istop = idx*self.batch_size, (idx+1)*self.batch_size
+#         if istop > self.l_tot: istop = self.l_tot # Resize the last batch
 
-        ifile = 0
-        multifile = False # Whether a batch includes entries from two files
-        for i,l in enumerate(self.lengths):
-            if istart >= l and not multifile: # Batch not in current file
-                istart -= l
-                istop -= l
-            elif istop > l: # Batch starts in current file, ends in next
-                multifile = True
-                istop -= l
-            else: # Batch starts and ends in current file
-                ifile = i
-                break
+#         ifile = 0
+#         multifile = False # Whether a batch includes entries from two files
+#         for i,l in enumerate(self.lengths):
+#             if istart >= l and not multifile: # Batch not in current file
+#                 istart -= l
+#                 istop -= l
+#             elif istop > l: # Batch starts in current file, ends in next
+#                 multifile = True
+#                 istop -= l
+#             else: # Batch starts and ends in current file
+#                 ifile = i
+#                 break
     
-        if multifile:
-            istop0 = self.lengths[ifile-1]
-            batch0 = self.__generate_batch(ifile-1, istart, istop0)
-            batch1 = self.__generate_batch(ifile, 0, istop)
-            if 'x' in self.mode and 'y' in self.mode:
-                return np.concatenate((batch0[0], batch1[0])), np.concatenate((batch0[1], batch1[1]))
-            else: return np.concatenate((batch0, batch1))
-        else:
-            return self.__generate_batch(ifile, istart, istop)
+#         if multifile:
+#             istop0 = self.lengths[ifile-1]
+#             batch0 = self.__generate_batch(ifile-1, istart, istop0)
+#             batch1 = self.__generate_batch(ifile, 0, istop)
+#             if 'x' in self.mode and 'y' in self.mode:
+#                 return np.concatenate((batch0[0], batch1[0])), np.concatenate((batch0[1], batch1[1]))
+#             else: return np.concatenate((batch0, batch1))
+#         else:
+#             return self.__generate_batch(ifile, istart, istop)
