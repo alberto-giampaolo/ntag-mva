@@ -2,7 +2,7 @@
 source ~/.bash_profile
 
 # Parameter file location to generate models
-PARAM_DIR="/home/llr/t2k/giampaolo/srn/ntag-mva/models/BDT/grid_2_n10thr5_50k/params"
+PARAM_DIR="/home/llr/t2k/giampaolo/srn/ntag-mva/models/BDT/grid_3_n10thr5_dn_100k/params"
 
 # script with single iteration of hyperparameter search
 # python script wrapped in shell script

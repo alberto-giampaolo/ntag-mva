@@ -11,8 +11,8 @@ libs = glob("/home/llr/t2k/giampaolo/skroot/*.so")
 for ll in libs:
     gSystem.Load(ll)
 
-dir_in  = "/data_CMS/cms/giampaolo/mc/darknoise/root/"
-dir_out = "/data_CMS/cms/giampaolo/mc/darknoise/root_flat/"
+dir_in  = "/data_CMS/cms/giampaolo/mc/darknoise4_new/root/"
+dir_out = "/data_CMS/cms/giampaolo/mc/darknoise4_new/root_flat_nlow/"
 rootfile_ins = glob(dir_in)
 tree_name = "sk2p2"
 
@@ -65,7 +65,7 @@ def flatten(rootfile_in, rootfile_out, rootfile_in2=None):
 
     var_types_to_copy = { 
         # Variables to copy without flattening (that are already flat)
-        'np':'i',
+        'np':'i', 'N200M':'i',
     }
 
     var_types_to_calc = { 
@@ -107,8 +107,11 @@ def flatten(rootfile_in, rootfile_out, rootfile_in2=None):
             # Nlow
             pvx, pvy, pvz = lowe.bsvertex[0], lowe.bsvertex[1], lowe.bsvertex[2]
             r2 = pvx**2 + pvy**2 
+            pvz /= 100.
+            r2 /= 10000.
             nlows = [var_arrays['Nlow%d'%i][0] for i in range(1,10)]
             nlowid = get_low_id(r2, pvz)
+            print(nlowid)
             var_arrays['Nlow'][0] = nlows[nlowid]
 
             # Signal truth variable

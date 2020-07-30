@@ -8,18 +8,18 @@ import matplotlib.pyplot as plt
 from load_ntag import load_dset, load_model, load_hist
 from metrics import plot_ROC, plot_ROC_td, plot_ROC_td_dn, plot_loss, plot_loss_hist, bdt_importance, bdt_importance_rank, plot_bdt_out
 
-model_name = 'BDT/n10thr6_051_500k_dn2/051' # For single model plotting
+model_name = 'BDT/n10thr5_041_d4n/041' # For single model plotting
 model_names = [model_name] # For plotting more than one ROC at the same time
-save_to = '/home/llr/t2k/giampaolo/srn/ntag-mva/models/BDT/n10thr6_051_500k_dn2'
+save_to = '/home/llr/t2k/giampaolo/srn/ntag-mva/models/BDT/n10thr5_041_d4n'
 fname = model_name.split('/')[-1]
 fnames = [mn.split('/')[-1] for mn in model_names]
-
 
 
 evaluate_on_test = True # Whether to plot ROC and output distributions on test dataset
 N10TH = 6 # N10 Threshold
 NFILES = 200 # Number of datafiles to use (50,000 events/file, maximum 200 files)
-NFILES_TRAIN = 10
+NFILES_TRAIN = 50
+NTREES = None
 
 # Load models
 print("Loading model(s)")
@@ -33,12 +33,13 @@ if evaluate_on_test:
 
     # Plot ROC curve
     print("Plotting performance (ROC)")
-    plot_ROC_td_dn(x_test,y_test,models_names_n6=zip(ntag_models,['BDT (N10>5, dark noise cut)']), 
+    plot_ROC_td_dn(x_test,y_test,models_names_n5=zip(ntag_models,['BDT (N10>4, dark noise cut, 1.9M events train set)']), 
             save_to=save_to, save_name='_'.join(fnames)+'.pdf', TMVA=True)
 
     # Plot BDT output distribution
     print("Plotting BDT discriminant")
-    plot_bdt_out(x_test, y_test, ntag_model ,x_train=x_train, y_train=y_train,save_loc=save_to+'/'+fname+'_bdt.pdf')
+    plot_bdt_out(x_test, y_test, ntag_model ,x_train=x_train, y_train=y_train,
+                 scale='log', save_loc=save_to+'/'+fname+'_bdt_log.pdf')
 
 # Plot loss function change
 print("Plotting loss history")
@@ -60,7 +61,7 @@ print("Plotting feature importance ranking")
 bdt_importance_rank(ntag_model, plot_location=save_to+'/'+fname+'_rank.pdf')
 
 
-#ntag_hists = [load_hist(model_name) for model_name in model_names]
-#plot_loss_hist(ntag_hists, model_names, 'loss')
-#plot_loss_hist(ntag_hists, model_names, 'val_loss')
+# ntag_hists = [load_hist(model_name) for model_name in model_names]
+# plot_loss_hist(ntag_hists, model_names, 'loss')
+# plot_loss_hist(ntag_hists, model_names, 'val_loss')
 

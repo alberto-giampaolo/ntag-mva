@@ -2,7 +2,7 @@
 source ~/.bash_profile
 which python
 
-ROOTFILES_DIR="/data_CMS/cms/giampaolo/mc/darknoise/root_flat"
+ROOTFILES_DIR="/data_CMS/cms/giampaolo/mc/darknoise4_new/root_flat_nlow"
 
 # python script wrapped in shell script (wrapper needed to properly launch jobs)
 WRAPPER="/home/llr/t2k/giampaolo/srn/ntag-mva/prepare_dset/root_hdf5.sh"

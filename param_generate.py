@@ -4,24 +4,29 @@ from pickle import dump
 # Generate random search parameters
 # for hyperparameter optimization
 
-n_samples = 500 # How many times to sample the params
-out_dir = "/home/llr/t2k/giampaolo/srn/ntag-mva/models/BDT/grid_2_n10thr5_50k/" # parameter dictionaries are stored in out_dir/params
+n_samples = 200 # How many times to sample the params
+out_dir = "/home/llr/t2k/giampaolo/srn/ntag-mva/models/BDT/grid_3_n10thr5_dn_100k/" # parameter dictionaries are stored in out_dir/params
 mode = 'BDT' # 'BDT' | 'NN'
 
 if mode=='BDT':
-    ntrees = ntrees = np.floor(expon(loc=1800,scale=500).rvs(size=n_samples))
+    # ntrees = ntrees = np.floor(expon(loc=1800,scale=500).rvs(size=n_samples))
     lrate = uniform.rvs(loc=0.0, scale=0.05, size=n_samples)
-    subsample = uniform.rvs(loc=0.5, scale=0.5, size=n_samples)
+    # subsample = uniform.rvs(loc=0.5, scale=0.5, size=n_samples)
     depth = randint.rvs(low=5,high=8, size=n_samples)
-    pos_weight = uniform.rvs(loc=1., scale=200., size=n_samples)
+    pos_weight = uniform.rvs(loc=1., scale=50., size=n_samples)
 
-    zipped = zip(ntrees, lrate, subsample, depth, pos_weight)
+    zipped = zip(
+                #  ntrees,
+                 lrate, 
+                #  subsample, 
+                 depth, 
+                 pos_weight)
     params = [{'learning_rate': lr,
-               'n_estimators': tr,
-               'subsample': ss,
+            #    'n_estimators': tr,
+            #    'subsample': ss,
                'maximum_depth': dp,
                'positive_weight': pw} 
-               for tr, lr, ss, dp, pw in zipped]
+               for lr, dp, pw in zipped]
 
 elif mode=='NN':
     epochs = (np.floor(expon(loc=2,scale=3).rvs(size=n_samples))).astype(int) # 20 300

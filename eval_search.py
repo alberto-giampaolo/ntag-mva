@@ -7,14 +7,22 @@ from load_ntag import load_hist
 from keras.metrics import AUC
 
 models_dir = "/home/llr/t2k/giampaolo/srn/ntag-mva/models/"
-grid_subdir = "BDT/grid_0_td/"
+grid_subdir = "BDT/grid_3_n10thr5_dn_100k/"
 grid_dir = models_dir + grid_subdir
 params_dir = grid_dir + "params/"
 
 
 print("Loading models...")
-model_files = glob(grid_dir + "models/[0-9][0-9][0-9].joblib")
-models_all = [jload(m) for m in model_files]
+model_files0, model_files = glob(grid_dir + "models/[0-9][0-9][0-9].joblib"), []
+models_all = []
+for m in model_files0:
+    try:
+        models_all += [jload(m)]
+        model_files += [m]
+    except EOFError:
+        continue
+
+#models_all = [jload(m) for m in model_files]
 mnames = [m.split('/')[-1].split('.')[-2] for m in model_files]
 param_files = [params_dir + '/' + mn + '.p' for mn in mnames]
 print("Loading parameter files...")
@@ -30,8 +38,11 @@ for pf, m in zip(param_files, models_all):
 
 print("Sorting models...")
 # Testing set evaluation result of final iteration
-mae = [m.evals_result()['validation_1']['mae'][-1] for m in models]
-auc = [m.evals_result()['validation_1']['auc'][-1] for m in models]
+mae = [m.evals_result()['validation_1']['mae'][m.best_iteration] for m in models]
+#auc = [m.evals_result()['validation_1']['aucpr'][-1] for m in models]
+auc = [m.evals_result()['validation_1']['auc'][m.best_iteration] for m in models]
+# auc = [m.best_score for m in models]
+
 # Sort with best models first
 models_sorted = sorted(models,  key = lambda x: auc[models.index(x)], reverse=True)
 params_sorted = sorted(params,  key = lambda x: auc[params.index(x)], reverse=True)
@@ -64,8 +75,9 @@ def plot_param(par):
 
     for i, txt in enumerate(modelID):
         if txt in modelID_sorted[:10]:
-            plt.annotate(txt, (parlist[i], (1-np.array(auc))[i]))
+            plt.scatter(parlist[i], 1-np.array(auc)[i], c='tab:red')
 
+    plt.grid(which='both')
     plt.savefig(grid_dir+'/plots/'+par+'.pdf')
     plt.clf()
 
@@ -107,7 +119,7 @@ def plot_bdt_auc():
 
     plt.style.use("seaborn")
     plt.yscale("linear")
-    plt.ylim(0.9775, 0.9850)
+    plt.ylim(0.9840, 0.9880)
     plt.legend()
     plt.xlabel("Training iteration")
     plt.ylabel('AUC (Test dataset)')
@@ -132,7 +144,7 @@ def plot_bdt_auc_bottom():
 rank()
 
 # Plot parameter performance
-params_to_plot = ['n_estimators', 'learning_rate', 'maximum_depth', 'subsample']
+params_to_plot = ['learning_rate', 'maximum_depth', 'positive_weight']
 for pr in params_to_plot:
     plot_param(pr)
 

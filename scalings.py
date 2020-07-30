@@ -21,21 +21,29 @@ pre_eff4_td = 0.670 # N10>4, time dependent sample
 pre_eff4_td_all = pre_eff4_td / td_w
 pre_eff4_td_srn = pre_eff4_td_all * srn_w
 
+pre_eff4_td_dn = 0.6101 # N10>4, time dependent sample and dark noise cut
+pre_eff4_td_dn_all = pre_eff4_td_dn / td_w
+pre_eff4_td_dn_srn = pre_eff4_td_dn_all * srn_w
+
 pre_eff5_td = 0.518 # N10>5, time dependent sample
 pre_eff5_td_all = pre_eff5_td / td_w
 pre_eff5_td_srn = pre_eff5_td_all * srn_w
+
+pre_eff5_td_dn = 0.4735 # N10>5, time dependent sample and dark noise cut
+pre_eff5_td_dn_all = pre_eff5_td_dn / td_w
+pre_eff5_td_dn_srn = pre_eff5_td_dn_all * srn_w
 
 pre_eff6_td = 0.4016  # N10>6, time dependent sample
 pre_eff6_td_all = pre_eff6_td / td_w # N10>6, time dependent sample. assume all events in window
 pre_eff6_td_srn = pre_eff6_td_all * srn_w # Scale by SRN window size
 
+pre_eff6_td_dn = 0.3618 # N10>6, time dependent sample and dark noise cut
+pre_eff6_td_dn_all = pre_eff6_td_dn / td_w
+pre_eff6_td_dn_srn = pre_eff6_td_dn_all * srn_w
+
 pre_eff7_td = 0.3004 # N10>7, time dependent sample
 pre_eff7_td_all = pre_eff7_td / td_w # N10>7, time dependent sample. assume all events in window
 pre_eff7_td_srn = pre_eff7_td_all * srn_w # Scale by SRN window size
-
-pre_eff5_td_dn = 0.4735 # N10>5, time dependent sample and dark noise cut
-pre_eff5_td_dn_all = pre_eff5_td_dn / td_w
-pre_eff5_td_dn_srn = pre_eff5_td_dn_all * srn_w
 #-----------------------------------------------------------------------------
 
 # Background rate ------------------------------------------------------------
@@ -43,20 +51,29 @@ bg_factor6 =  3.06   # N10>6 background rate compared with N10>7 cut bg rate, Li
 bg_factor5 = 11.36   # N10>5 background rate compared with N10>7 cut bg rate, Linyan MC
 
 bg_per_ev7 = 1.7766  # BG peaks/event, N10>7, Linyan MC
-bg_per_ev6 = 5.4562  # BG peaks/event, N10>6, Linyan MC
 bg_per_ev7_srn = bg_per_ev7 * (535.-2.)/(535.-18.) # BG peaks/ev N10>7 Linyan MC, SRN window
+
+bg_per_ev6 = 5.4562  # BG peaks/event, N10>6, Linyan MC
 bg_per_ev6_srn = bg_per_ev6 * (535.-2.)/(535.-18.) # BG peaks/ev N10>6 Linyan MC, SRN window
 
-bg_per_ev6_td = 4.9815 # BG peaks/event, N10>6, time-dependent sample
 bg_per_ev7_td = 1.6377 # BG peaks/event, N10>7, time-dependent sample
-bg_per_ev6_td_srn = bg_per_ev6_td * (535.-2.)/(535.-18.) # BG peaks/ev N10>6 time-dependent, SRN window
 bg_per_ev7_td_srn = bg_per_ev7_td * (535.-2.)/(535.-18.) # BG peaks/ev N10>6 time-dependent, SRN window
 
-bg_per_ev4_td = 79.44   # BG peaks/event, N10>4, time-dependent sample
-bg_per_ev5_td = 17.559  # BG peaks/event, N10>5, time-dependent sample
-bg_per_ev4_td_srn = bg_per_ev4_td * (535.-2.)/(535.-18.) # BG peaks/ev N10>6 time-dependent, SRN window
-bg_per_ev5_td_srn = bg_per_ev5_td * (535.-2.)/(535.-18.) # BG peaks/ev N10>6 time-dependent, SRN window
+bg_per_ev6_td_dn = 3.2919  # BG peaks/event, N10>6, time-dependent sample with dark noise cut
+bg_per_ev6_td_dn_srn = bg_per_ev6_td_dn * (535.-2.)/(535.-18.) # SRN window
+
+bg_per_ev6_td = 4.9815 # BG peaks/event, N10>6, time-dependent sample
+bg_per_ev6_td_srn = bg_per_ev6_td * (535.-2.)/(535.-18.) # BG peaks/ev N10>6 time-dependent, SRN window
 
 bg_per_ev5_td_dn = 11.081  # BG peaks/event, N10>5, time-dependent sample with dark noise cut
 bg_per_ev5_td_dn_srn = bg_per_ev5_td_dn * (535.-2.)/(535.-18.) # SRN window
+
+bg_per_ev5_td = 17.559  # BG peaks/event, N10>5, time-dependent sample
+bg_per_ev5_td_srn = bg_per_ev5_td * (535.-2.)/(535.-18.) # BG peaks/ev N10>6 time-dependent, SRN window
+
+bg_per_ev4_td_dn = 45.83  # BG peaks/event, N10>4, time-dependent sample with dark noise cut
+bg_per_ev4_td_dn_srn = bg_per_ev4_td_dn * (535.-2.)/(535.-18.) # SRN window
+
+bg_per_ev4_td = 79.44   # BG peaks/event, N10>4, time-dependent sample
+bg_per_ev4_td_srn = bg_per_ev4_td * (535.-2.)/(535.-18.) # BG peaks/ev N10>6 time-dependent, SRN window
 # ----------------------------------------------------------------------------

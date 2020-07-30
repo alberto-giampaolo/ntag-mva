@@ -1,12 +1,14 @@
 import numpy as np
 import h5py
+import scalings
 from glob import glob
 from joblib import load, dump
 from keras.utils import Sequence
 
 # polui
 # dset_location = "/data_CMS/cms/giampaolo/mc/td-ntag-dset-lowN10/hdf5_flat/" # No DN cut
-dset_location = "/data_CMS/cms/giampaolo/mc/darknoise/hdf5_flat/" # DN cut
+dset_location = "/data_CMS/cms/giampaolo/mc/darknoise4_new/hdf5_flat/" # DN cut
+# dset_location = "/data_CMS/cms/giampaolo/mc/darknoise4_new/hdf5_flat_nlow/" # DN cut, proper Nlow
 model_location = "/home/llr/t2k/giampaolo/srn/ntag-mva/models/"
 tree_name = "sk2p2"
 
@@ -99,7 +101,7 @@ def unstructure(arr, dtype=None, copy=False, casting='unsafe'):
     # finally is it safe to view the packed fields as the unstructured type
     return arr.view((out_dtype, (sum(counts),)))
 
-def load_dset(N10th=7, file_frac=0.005, test_frac=0.25, mode='xy', file_start=0.0, run=None):
+def load_dset(N10th=7, file_frac=0.005, test_frac=0.25, mode='xy', file_start=0.0, run=None, shuffle=False, file_num=None):
     '''
     Load neutron tagging training and testing datasets into memory.
     file_frac controls the fraction of the file to use, in [0,1].
@@ -114,21 +116,39 @@ def load_dset(N10th=7, file_frac=0.005, test_frac=0.25, mode='xy', file_start=0.
     #files = [dset_location+'%03i.hdf5'%i for i in range(start_file, start_file+num_files)]
     if run:
         files = glob(dset_location + '*r'+ str(int(run)) + '*')
+        if file_num: files = glob(dset_location + '*r'+ str(int(run)) + '.' + str(file_num) + '.hdf5')
     else:
         files = glob(dset_location + '*')
     x_test, x_train, y_test, y_train = [], [], [], []
+
+    # runs = [63388, 66491, 67977, 69353, 70994, 72012, 73019, 74006, 75013, 76804]
+    # run_entries = {r:0 for r in runs}
+    # max_run_entries =10000000  #7671000 #10000000000000 TEMPORARY
+
     for fname in files:
+        
         # Load data
         f = h5py.File(fname,'r')
         dset = f[tree_name]
+
         tot_entries = len(dset)
         if tot_entries == 0: continue
+        
         n_entries = int(np.ceil(file_frac * tot_entries))
         n_start = int(np.floor(file_start * tot_entries))
         dset = dset[n_start : n_start + n_entries]
 
         # Preselection cut
         presel = dset["N10"]>=N10th
+        # frun = int(fname.split('.')[1][1:])
+        # if run_entries[frun] >= max_run_entries: continue
+        # run_entries[frun] += sum(presel)
+        # if run_entries[frun] > max_run_entries: 
+            # tot_entries -= (run_entries[frun] - max_run_entries)
+            # run_entries[frun] -= (run_entries[frun] - max_run_entries)
+        n200mcut = dset["N200M"]<50
+        presel = presel & n200mcut
+
         # Build training and testing samples
         test_frac_num = int(1./test_frac)
         test, train = dset["event_num"]%test_frac_num==0, dset["event_num"]%test_frac_num!=0
@@ -146,8 +166,33 @@ def load_dset(N10th=7, file_frac=0.005, test_frac=0.25, mode='xy', file_start=0.
             y_test += [y_itest]
             y_train += [y_itrain]
 
-    if 'x' in mode: x_test, x_train = np.concatenate(x_test), np.concatenate(x_train)
-    if 'y' in mode: y_test, y_train = np.concatenate(y_test), np.concatenate(y_train)
+        print(fname)
+
+    print("Getting random state")
+    rng_state = np.random.get_state()
+    if 'x' in mode:
+        print("Concatenating features...")
+        x_test, x_train = np.concatenate(x_test), np.concatenate(x_train)
+        if shuffle:
+            print("Shuffling test set...")
+            np.random.set_state(rng_state)
+            np.random.shuffle(x_test)
+            print("Shuffling train set...")
+            np.random.set_state(rng_state)
+            np.random.shuffle(x_train)
+
+    if 'y' in mode: 
+        print("Concatenating targets...")
+        y_test, y_train = np.concatenate(y_test), np.concatenate(y_train)
+        if shuffle:
+            print("Shuffling test set...")
+            np.random.set_state(rng_state)
+            np.random.shuffle(y_test)
+            print("Shuffling train set...")
+            np.random.set_state(rng_state)
+            np.random.shuffle(y_train)
+
+    print("Shape of final test, train dataset:", x_test.shape, x_train.shape)
 
     if 'x' in mode and 'y' in mode: return x_test, x_train, y_test, y_train
     elif mode == 'x': return x_test, x_train

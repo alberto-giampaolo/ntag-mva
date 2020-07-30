@@ -9,7 +9,7 @@ from load_ntag import varlist
 
 def plot_ROC(x_test, y_test,
              models_names_n7=[], models_names_n8=[],
-             SRN_scale=True, save_to=None, save_name="", TMVA=False):
+             SRN_scale=True, save_to=None, save_name="", TMVA=False, ntrees=None):
     '''
     Plot ROC curves for list of models on the testing dataset x_test,y_test.
     Models described by list models_names_n7 and models_names_n8, (depending on N10 threshold),
@@ -22,18 +22,18 @@ def plot_ROC(x_test, y_test,
     for model, name in models_names_n7:
         pre_eff, bg_ev = (pre_eff6_srn,bg_per_ev6_srn) if SRN_scale else (pre_eff6,bg_per_ev6)
         try:
-            ntag_pred = model.predict_proba(x_test)[:,1]
+            ntag_pred = model.predict_proba(x_test, ntree_limit=ntrees)[:,1]
         except IndexError:
-            ntag_pred = model.predict(x_test)
+            ntag_pred = model.predict(x_test, ntree_limit=ntrees)
         ntag_fp, ntag_tp, _ = roc_curve(y_test,ntag_pred)
         plt.plot(pre_eff*ntag_tp,bg_ev*ntag_fp,label=name, linewidth=1)
 
     for model, name in models_names_n8:
         pre_eff, bg_ev = (pre_eff7_srn,bg_per_ev7_srn) if SRN_scale else (pre_eff7,bg_per_ev7)
         try:
-            ntag_pred = model.predict_proba(x_test)[:,1]
+            ntag_pred = model.predict_proba(x_test, ntree_limit=ntrees)[:,1]
         except IndexError:
-            ntag_pred = model.predict(x_test)
+            ntag_pred = model.predict(x_test, ntree_limit=ntrees)
         ntag_fp, ntag_tp, _ = roc_curve(y_test,ntag_pred)
         plt.plot(pre_eff*ntag_tp,bg_ev*ntag_fp,label=name, linewidth=1)
 
@@ -67,7 +67,7 @@ def plot_ROC(x_test, y_test,
 
 def plot_ROC_td(x_test, y_test, 
                 models_names_n5=[],models_names_n6=[], models_names_n7=[],models_names_n8=[],
-                SRN_scale=True, save_to=None, save_name="", TMVA=False):
+                SRN_scale=True, save_to=None, save_name="", TMVA=False, ntrees=None):
     '''
     Plot ROC curves, for time dependent test set 
     '''
@@ -77,28 +77,28 @@ def plot_ROC_td(x_test, y_test,
     for model, name in models_names_n5:
         pre_eff, bg_ev = (pre_eff4_td_srn, bg_per_ev4_td_srn) if SRN_scale else (pre_eff4_td, bg_per_ev4_td)
         
-        ntag_pred = model.predict_proba(x_test)[:,1]
+        ntag_pred = model.predict_proba(x_test, ntree_limit=ntrees)[:,1]
         ntag_fp, ntag_tp, _ = roc_curve(y_test,ntag_pred)
         plt.plot(pre_eff*ntag_tp,bg_ev*ntag_fp,label=name, linewidth=1)
 
     for model, name in models_names_n6:
         pre_eff, bg_ev = (pre_eff5_td_srn, bg_per_ev5_td_srn) if SRN_scale else (pre_eff5_td, bg_per_ev5_td)
         
-        ntag_pred = model.predict_proba(x_test)[:,1]
+        ntag_pred = model.predict_proba(x_test, ntree_limit=ntrees)[:,1]
         ntag_fp, ntag_tp, _ = roc_curve(y_test,ntag_pred)
         plt.plot(pre_eff*ntag_tp,bg_ev*ntag_fp,label=name, linewidth=1)
 
     for model, name in models_names_n7:
         pre_eff, bg_ev = (pre_eff6_td_srn, bg_per_ev6_td_srn) if SRN_scale else (pre_eff6_td, bg_per_ev6_td)
         
-        ntag_pred = model.predict_proba(x_test)[:,1]
+        ntag_pred = model.predict_proba(x_test, ntree_limit=ntrees)[:,1]
         ntag_fp, ntag_tp, _ = roc_curve(y_test,ntag_pred)
         plt.plot(pre_eff*ntag_tp,bg_ev*ntag_fp,label=name, linewidth=1)
 
     for model, name in models_names_n8:
         pre_eff, bg_ev = (pre_eff7_td_srn, bg_per_ev7_td_srn) if SRN_scale else (pre_eff7_td, bg_per_ev7_td)
         
-        ntag_pred = model.predict_proba(x_test)[:,1]
+        ntag_pred = model.predict_proba(x_test, ntree_limit=ntrees)[:,1]
         ntag_fp, ntag_tp, _ = roc_curve(y_test,ntag_pred)
         plt.plot(pre_eff*ntag_tp,bg_ev*ntag_fp,label=name, linewidth=1)
 
@@ -127,8 +127,8 @@ def plot_ROC_td(x_test, y_test,
     else: plt.show()
 
 def plot_ROC_td_dn(x_test, y_test, 
-                models_names_n6=[],
-                SRN_scale=True, save_to=None, save_name="", TMVA=False):
+                models_names_n6=[], models_names_n5=[],
+                SRN_scale=True, save_to=None, save_name="", TMVA=False, ntrees=None):
     '''
     Plot ROC curves, for time dependent test set with dark noise cut
     '''
@@ -138,7 +138,14 @@ def plot_ROC_td_dn(x_test, y_test,
     for model, name in models_names_n6:
         pre_eff, bg_ev = (pre_eff5_td_dn_srn, bg_per_ev5_td_dn_srn) if SRN_scale else (pre_eff5_td_dn, bg_per_ev5_td_dn)
         
-        ntag_pred = model.predict_proba(x_test)[:,1]
+        ntag_pred = model.predict_proba(x_test, ntree_limit=ntrees)[:,1]
+        ntag_fp, ntag_tp, _ = roc_curve(y_test,ntag_pred)
+        plt.plot(pre_eff*ntag_tp,bg_ev*ntag_fp,label=name, linewidth=1)
+
+    for model, name in models_names_n5:
+        pre_eff, bg_ev = (pre_eff4_td_dn_srn, bg_per_ev4_td_dn_srn) if SRN_scale else (pre_eff4_td_dn, bg_per_ev4_td_dn)
+        
+        ntag_pred = model.predict_proba(x_test, ntree_limit=ntrees)[:,1]
         ntag_fp, ntag_tp, _ = roc_curve(y_test,ntag_pred)
         plt.plot(pre_eff*ntag_tp,bg_ev*ntag_fp,label=name, linewidth=1)
 
@@ -236,23 +243,27 @@ def plot_ROC_sigle_gen(x_test_generator,y_test, model, name, N10th, time_dep_tes
     ax.text(.05,.92,'Neutron tagging performance',horizontalalignment='left',transform=ax.transAxes, weight='bold')
     plt.show()
 
-def plot_bdt_out(x_test, y_test, model, x_train=None, y_train=None, save_loc=''):
+def plot_bdt_out(x_test, y_test, model, x_train=None, y_train=None, save_loc='', scale='linear', ntrees=None):
     '''
     Plot BDT ouput distribution for model on given test sample.
     If given, also plot training distributions for overtraining check.
     '''
     plt.style.use("seaborn")
     nbins = 20
-    edges = np.linspace(0,1,nbins+1)
-    width = edges[1]-edges[0]
+    if scale=='log': edges = (np.logspace(np.log10(0.001), np.log10(1.0), num=nbins+1))
+    else: edges = np.linspace(0,1,nbins+1)
+    # width = edges[1]-edges[0]
+    width = edges[1:] - edges[:-1]
 
-    ntag_pred = model.predict_proba(x_test)[:,1] 
+    ntag_pred = model.predict_proba(x_test, ntree_limit=ntrees)[:,1] 
+    if scale == 'log': ntag_pred = 1-ntag_pred
     ntag_pred_s, ntag_pred_b = ntag_pred[y_test==1], ntag_pred[y_test==0]
     plt.hist([ntag_pred_b, ntag_pred_s], bins=edges, density= True, zorder=2,
              label=["Accidental coincidences (Test set)", "True neutrons (Test set)"])
 
     if x_train is not None and y_train is not None:
-        ntag_pred_tr = model.predict_proba(x_train)[:,1]
+        ntag_pred_tr = model.predict_proba(x_train, ntree_limit=ntrees)[:,1]
+        if scale == 'log': ntag_pred_tr = 1-ntag_pred_tr
         ntag_pred_tr_s, ntag_pred_tr_b = ntag_pred_tr[y_train==1], ntag_pred_tr[y_train==0]
         hs, _, = np.histogram(ntag_pred_tr_s, bins=edges, density=True)
         hb, _  = np.histogram(ntag_pred_tr_b, bins=edges, density=True)
@@ -265,6 +276,53 @@ def plot_bdt_out(x_test, y_test, model, x_train=None, y_train=None, save_loc='')
     plt.ylabel('Events / (N * 0.05)')
     plt.legend()
     plt.yscale('log')
+    if scale=='log': 
+        plt.xscale('log')
+        plt.xlabel('1 - BDT Discriminant')
+
+    #ax.tick_params(axis="both",which='both', direction="in")
+
+    if save_loc: 
+        plt.savefig(save_loc)
+        plt.clf()
+    else: plt.show()
+
+def get_bg_overtraining(x_test, y_test, model, x_train, y_train, ntrees=None):
+    '''
+    Get BG overtraining estimate for given test/train set and model.
+    Overtraining calculated as (N_test-N_train)/N_test
+    '''
+    plt.style.use("seaborn")
+    nbins = 20
+    if scale=='log': edges = (np.logspace(np.log10(0.001), np.log10(1.0), num=nbins+1))
+    else: edges = np.linspace(0,1,nbins+1)
+    # width = edges[1]-edges[0]
+    width = edges[1:] - edges[:-1]
+
+    ntag_pred = model.predict_proba(x_test, ntree_limit=ntrees)[:,1] 
+    if scale == 'log': ntag_pred = 1-ntag_pred
+    ntag_pred_s, ntag_pred_b = ntag_pred[y_test==1], ntag_pred[y_test==0]
+    plt.hist([ntag_pred_b, ntag_pred_s], bins=edges, density= True, zorder=2,
+             label=["Accidental coincidences (Test set)", "True neutrons (Test set)"])
+
+    if x_train is not None and y_train is not None:
+        ntag_pred_tr = model.predict_proba(x_train, ntree_limit=ntrees)[:,1]
+        if scale == 'log': ntag_pred_tr = 1-ntag_pred_tr
+        ntag_pred_tr_s, ntag_pred_tr_b = ntag_pred_tr[y_train==1], ntag_pred_tr[y_train==0]
+        hs, _, = np.histogram(ntag_pred_tr_s, bins=edges, density=True)
+        hb, _  = np.histogram(ntag_pred_tr_b, bins=edges, density=True)
+        plt.scatter(edges[:-1]+ width*0.25, hb, label="Accidental coincidences (Train set)", 
+                    edgecolors='k', zorder=3)
+        plt.scatter(edges[:-1]+ width*0.75, hs, label="True neutrons (Train set)", 
+                    edgecolors='k', zorder=3)
+
+    plt.xlabel('BDT Discriminant')
+    plt.ylabel('Events / (N * 0.05)')
+    plt.legend()
+    plt.yscale('log')
+    if scale=='log': 
+        plt.xscale('log')
+        plt.xlabel('1 - BDT Discriminant')
 
     #ax.tick_params(axis="both",which='both', direction="in")
 

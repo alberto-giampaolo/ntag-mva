@@ -16,8 +16,8 @@ def rate_err_poisson(k,n):
     return np.sqrt(err) * float(k)/n
 
 def get_scalings(run=None):
-    if run: ntags = glob("/data_CMS/cms/giampaolo/mc/darknoise/hdf5_flat/*r"+str(int(run))+"*")
-    else: ntags = glob("/data_CMS/cms/giampaolo/mc/darknoise/hdf5_flat/*")
+    if run: ntags = glob("/data_CMS/cms/giampaolo/mc/darknoise4/hdf5_flat/*r"+str(int(run))+"*")
+    else: ntags = glob("/data_CMS/cms/giampaolo/mc/darknoise4/hdf5_flat/*")
 
     n10s = []
     n10b = []

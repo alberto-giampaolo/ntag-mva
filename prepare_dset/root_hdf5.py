@@ -6,9 +6,9 @@ if __name__=='__main__':
     if len(argv) > 1: 
         rootfile_ins = [argv[1]]
     else:
-        rootfile_ins = glob("/data_CMS/cms/giampaolo/mc/darknoise/root_flat/*")
+        rootfile_ins = glob("/data_CMS/cms/giampaolo/mc/darknoise4_new/root_flat_nlow/*")
 
-    hdf5file_outs = ["/data_CMS/cms/giampaolo/mc/darknoise/hdf5_flat/"
+    hdf5file_outs = ["/data_CMS/cms/giampaolo/mc/darknoise4_new/hdf5_flat_nlow/"
                     + '.'.join(fl.split("/")[-1].split(".")[:-1]) 
                     + '.hdf5' for fl in rootfile_ins]
     for rin, hout in zip(rootfile_ins, hdf5file_outs):

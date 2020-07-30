@@ -2,7 +2,7 @@
 source ~/.bash_profile
 which python
 
-ROOTFILES_DIR="/data_CMS/cms/giampaolo/mc/darknoise/root"
+ROOTFILES_DIR="/data_CMS/cms/giampaolo/mc/darknoise4_new/root"
 ROOTFILES_DIR2="/data_CMS/cms/giampaolo/mc/td-ntag-dset-lowN10/root/mc_truth"
 
 # python script wrapped in shell script (wrapper needed to properly launch jobs)

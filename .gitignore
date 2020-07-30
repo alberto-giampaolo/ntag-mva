@@ -1,4 +1,8 @@
 *.pyc
+*.pdf
+*.png
+*.txt
+*.p
 launch.json
 settings.json
 
