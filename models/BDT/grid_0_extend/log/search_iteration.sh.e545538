@@ -1,3 +1,0 @@
-terminate called after throwing an instance of 'std::bad_alloc'
-  what():  std::bad_alloc
-/var/lib/condor/execute/dir_21908/condor_exec.exe: line 10: 22141 Aborted                 (core dumped) python $SEARCH_ITER $1 > ${1:0: -12}log/${1: -5:3}.txt

@@ -1,16 +1,18 @@
-from rootpy.root2hdf5 import root2hdf5
-from glob import glob
+"""
+Convert a flat-structure root file to hdf5 format
+Usage: python root_hdf5.py input_file.root output_file.h5
+"""
+from __future__ import print_function
 from sys import argv
 
-if __name__=='__main__':
-    if len(argv) > 1: 
-        rootfile_ins = [argv[1]]
-    else:
-        rootfile_ins = glob("/data_CMS/cms/giampaolo/mc/darknoise4_new/root_flat_nlow/*")
+from rootpy.root2hdf5 import root2hdf5
 
-    hdf5file_outs = ["/data_CMS/cms/giampaolo/mc/darknoise4_new/hdf5_flat_nlow/"
-                    + '.'.join(fl.split("/")[-1].split(".")[:-1]) 
-                    + '.hdf5' for fl in rootfile_ins]
-    for rin, hout in zip(rootfile_ins, hdf5file_outs):
-        root2hdf5(rin,hout,entries=10000, show_progress=True)
-        print('Converted file:', rin, '-->', hout)
+
+if __name__=='__main__':
+    if len(argv) != 3:
+        raise ValueError("Usage: python root_hdf5.py root_in h5_out")
+
+    root_in = argv[1]
+    h5_out = argv[2]
+    root2hdf5(root_in,h5_out,entries=10000, show_progress=True)
+    print('Converted file:', root_in, '-->', h5_out)

@@ -1,3 +1,0 @@
-terminate called after throwing an instance of 'std::bad_alloc'
-  what():  std::bad_alloc
-/var/lib/condor/execute/dir_4133/condor_exec.exe: line 9:  4404 Aborted                 python $SEARCH_ITER $1

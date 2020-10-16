@@ -1,2 +1,0 @@
-/var/lib/condor/execute/dir_3398/condor_exec.exe: line 2: /home/llr/t2k/giampaolo/.bash_profile: No such file or directory
-python: can't open file '/home/llr/t2k/giampaolo/srn/ntag-mva/param_search_bdt.py': [Errno 2] No such file or directory

@@ -1,5 +1,0 @@
-Using TensorFlow backend.
-Traceback (most recent call last):
-  File "/home/llr/t2k/giampaolo/srn/ntag-mva/param_search_nn.py", line 35, in <module>
-    ntag_model.add(Dense(params['width'], activation='relu', input_dim=22))
-KeyError: 'width'

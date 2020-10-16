@@ -1,28 +1,23 @@
+"""
+Dataset and model loading functions
+"""
+from __future__ import print_function
+import sys
+from os import environ
+from glob import glob
+
 import numpy as np
 import h5py
-import scalings
-from glob import glob
 from joblib import load, dump
-# from keras.utils import Sequence
 
-# polui
-# dset_location = "/data_CMS/cms/giampaolo/mc/td-ntag-dset-lowN10/hdf5_flat/" # No DN cut
-dset_location = "/data_CMS/cms/giampaolo/mc/darknoise4_new/hdf5_flat/" # DN cut
-# dset_location = "/data_CMS/cms/giampaolo/mc/darknoise4_new/hdf5_flat_nlow/" # DN cut, proper Nlow
-model_location = "/home/llr/t2k/giampaolo/srn/ntag-mva/models/"
+H5_DIR = environ['ntag_hdf5_dir_train']
+H5_DIR_T2K = environ['ntag_hdf5_dir_train_t2k']
+MODELS_DIR = environ['models_dir']
+
 tree_name = "sk2p2"
-
-# local Linux
-#dset_location = "/media/alberto/KINGSTON/Data/hdf5_flat/shift0/" # Directory of flattened (1 peak/entry) hdf5 files
-#model_location = "/home/alberto/SK19/ntag_algo/models/" # Directory of trained ntag models
-# local Windows
-#dset_location = "F:\\Data\\hdf5_flat\\shift0\\"
-#model_location = "D:\\Alberto\\University\\X_HS_2018_2019\\DSNB_SK\\Neutron_tagging\\ntag_local\\models\\"
-
-varlist = '''N10 N10d Nc Nback N300 trms trmsdiff fpdist bpdist 
-            fwall bwall bse mintrms_3 mintrms_6 Qrms Qmean 
+varlist = '''N10 N10d Nc Nback N300 trms trmsdiff fpdist bpdist
+            fwall bwall bse mintrms_3 mintrms_6 Qrms Qmean
             thetarms NLowtheta phirms thetam NhighQ Nlow'''.split()
-
 
 
 def get_fields_and_offsets(dt, offset=0):
@@ -42,6 +37,7 @@ def get_fields_and_offsets(dt, offset=0):
         else:
             fields.extend(get_fields_and_offsets(field[0], field[1] + offset))
     return fields
+
 
 def unstructure(arr, dtype=None, copy=False, casting='unsafe'):
     """
@@ -90,230 +86,175 @@ def unstructure(arr, dtype=None, copy=False, casting='unsafe'):
                                  'formats': dts,
                                  'offsets': offsets,
                                  'itemsize': arr.dtype.itemsize})
-    
+
     arr = arr.view(flattened_fields)
 
     # next cast to a packed format with all fields converted to new dtype
     packed_fields = np.dtype({'names': names,
-                              'formats': [(out_dtype, dt.shape) for dt in dts]})
+                              'formats': [(out_dtype,
+                                           dt.shape) for dt in dts]})
     arr = arr.astype(packed_fields, copy=copy, casting=casting)
 
     # finally is it safe to view the packed fields as the unstructured type
     return arr.view((out_dtype, (sum(counts),)))
 
-def load_dset(N10th=7, file_frac=0.005, test_frac=0.25, mode='xy', file_start=0.0, run=None, shuffle=False, file_num=None):
+
+def load_dset(N10th=7, file_frac_s=0.005, file_frac_bg=0.005, test_frac=0.25,
+              file_start_s=0.0, file_start_bg=0.0, val_id=0, mode='xy',
+              shuffle=False, dtype='float32', nums=False):
     '''
     Load neutron tagging training and testing datasets into memory.
-    file_frac controls the fraction of the file to use, in [0,1].
-    test_frac controls how much of the dataset should be used for testing.
-    Mode must be chosen from: 'xy','yx','x','y' to return either
-    features, targets, or both, in a tuple (x_test, x_train, y_test, y_train).
-    Omitting features can be useful to limit memory usage.
-    file_start is the file fraction at which to start loading entries,
-    e.g. 0.5 to start in the middle
+    file_frac_s : fraction of the file topr use, in [0,1].
+    file_frac_bg : fraction of background files to use.
+    test_frac : how much of the dataset should be used for testing/validation.
+        test : validate : train = test_frac : test_frac : (1 - 2*test_frac)
+    file_start_s : file fraction at which to start loading signal entries.
+    file_start_bg : file fraction at which to start loading background entries.
+    val_id : cross-validation index (defaul=0 for no cross-validation)
+    mode : to be chosen from: 'x', 'y', 'xy' to return either
+        features, targets, or both, in a tuple.
+        Omitting features can be useful to limit memory usage.
+
+    shuffle : shuffle entries after loading.
+    dtype : Numpy dtype
+    nums : return run number and event number along  with features
+    Returns: (x_test, x_validation, x_train, y_test, y_validation, y_train)
     '''
-    if mode not in ['xy','yx','x','y']: raise ValueError("mode must be chosen from: 'xy','yx','x','y'")
-    #files = [dset_location+'%03i.hdf5'%i for i in range(start_file, start_file+num_files)]
-    if run:
-        files = glob(dset_location + '*r'+ str(int(run)) + '*')
-        if file_num: files = glob(dset_location + '*r'+ str(int(run)) + '.' + str(file_num) + '.hdf5')
+    if mode not in ['xy', 'x', 'y']:
+        raise ValueError("mode must be chosen from: 'xy','x','y'")
+    # files_s = glob(H5_DIR + '/*62447*')
+    files_s = glob(H5_DIR + '/*ntag*')
+    files_bg = glob(H5_DIR_T2K + '/*ntag*')
+    x_test, x_val, x_train, y_test, y_val, y_train = [], [], [], [], [], []
+    test_frac_num = int(1./test_frac)
+    val_id = val_id % (test_frac_num-1)
+    if nums:
+        load_vars = varlist + ['run_num', 'event_num']
     else:
-        files = glob(dset_location + '*')
-    x_test, x_train, y_test, y_train = [], [], [], []
+        load_vars = varlist
+    numvars = len(load_vars)
 
-    # runs = [63388, 66491, 67977, 69353, 70994, 72012, 73019, 74006, 75013, 76804]
-    # run_entries = {r:0 for r in runs}
-    # max_run_entries =10000000  #7671000 #10000000000000 TEMPORARY
+    def load_subset(files, file_frac, file_start, mc=False):
+        """
+        Load from given file list and file fractions.
+        mc : take only signal entries
+        """
+        if file_frac == 0.0:
+            return
+        ntot = len(files)
+        n = 0
+        sys.stdout.flush()
+        for fname in files:
+            print(f"{float(n)/ntot*100:.1f} %", end="\r")
+            n += 1
+            with h5py.File(fname, 'r') as f:
+                try:
+                    dset = f[tree_name]
+                except KeyError:  # Corrupted/crashed files
+                    continue
+                tot_entries = len(dset)
+                if tot_entries == 0:  # Corrupted/crashed files
+                    continue
 
-    for fname in files:
-        
-        # Load data
-        f = h5py.File(fname,'r')
-        dset = f[tree_name]
+                n_entries = int(np.ceil(file_frac * tot_entries))
+                n_start = int(np.floor(file_start * tot_entries))
+                dset = dset[n_start: n_start + n_entries]
 
-        tot_entries = len(dset)
-        if tot_entries == 0: continue
-        
-        n_entries = int(np.ceil(file_frac * tot_entries))
-        n_start = int(np.floor(file_start * tot_entries))
-        dset = dset[n_start : n_start + n_entries]
+                # Preselection cut
+                presel = dset["N10"] >= N10th
+                # print(presel)
+                n200mcut = dset["N200M"] < 50
+                presel = presel & n200mcut
 
-        # Preselection cut
-        presel = dset["N10"]>=N10th
-        # frun = int(fname.split('.')[1][1:])
-        # if run_entries[frun] >= max_run_entries: continue
-        # run_entries[frun] += sum(presel)
-        # if run_entries[frun] > max_run_entries: 
-            # tot_entries -= (run_entries[frun] - max_run_entries)
-            # run_entries[frun] -= (run_entries[frun] - max_run_entries)
-        n200mcut = dset["N200M"]<50
-        presel = presel & n200mcut
+                # Avoid double-counting accidentals
+                if mc:
+                    presel = presel & dset["is_signal"] == 1
+                # Build training, testing, and validation samples
+                test = ((dset["event_num"] % test_frac_num) == 0)
+                vali = ((dset["event_num"] % test_frac_num) == (val_id+1))
+                train = (~ (test | vali))
+                test, vali = test & presel, vali & presel
+                train = train & presel
 
-        # Build training and testing samples
-        test_frac_num = int(1./test_frac)
-        test, train = dset["event_num"]%test_frac_num==0, dset["event_num"]%test_frac_num!=0
-        test, train = test & presel, train & presel
-        if 'x' in mode:
-            x = dset[varlist]
-            x_itest, x_itrain = x[test], x[train]
-            # Remove ndarray structure, converting to unstructured float ndarray
-            x_itest, x_itrain = unstructure(x_itest), unstructure(x_itrain)
-            x_test += [x_itest]
-            x_train += [x_itrain]
-        if 'y' in mode:
-            y = dset["is_signal"]
-            y_itest, y_itrain = y[test], y[train]
-            y_test += [y_itest]
-            y_train += [y_itrain]
+                if 'x' in mode:
+                    x = dset[load_vars]
+                    x_itest, x_ival, x_itrain = x[test], x[vali], x[train]
+                    # Remove ndarray structure,
+                    # converting to unstructured float ndarray
+                    x_itest = unstructure(x_itest)
+                    x_ival = unstructure(x_ival)
+                    x_itrain = unstructure(x_itrain)
+                    x_test.append(x_itest.astype(dtype))
+                    x_val.append(x_ival.astype(dtype))
+                    x_train.append(x_itrain.astype(dtype))
+                if 'y' in mode:
+                    y = dset["is_signal"]
+                    y_itest, y_ival, y_itrain = y[test], y[vali], y[train]
+                    y_test.append(y_itest)
+                    y_val.append(y_ival)
+                    y_train.append(y_itrain)
+    if file_frac_s == 0.0 and file_frac_bg == 0.0:
+        x_test.append(np.empty((0, numvars)))
+        x_val.append(np.empty((0, numvars)))
+        x_train.append(np.empty((0, numvars)))
+        y_test.append(np.empty((0,)))
+        y_val.append(np.empty((0,)))
+        y_train.append(np.empty((0,)))
+    if file_frac_s > 0.0:
+        print("Loading signal events...")
+        load_subset(files_s, file_frac_s, file_start_s, mc=True)
+    if file_frac_bg > 0.0:
+        print("Loading background events...")
+        load_subset(files_bg, file_frac_bg, file_start_bg)
 
-        print(fname)
-
-    print("Getting random state")
+    # Concat and shuffle
     rng_state = np.random.get_state()
     if 'x' in mode:
-        print("Concatenating features...")
-        x_test, x_train = np.concatenate(x_test), np.concatenate(x_train)
+        print("Preparing features...")
+        x_test = np.concatenate(x_test)
+        x_val = np.concatenate(x_val)
+        x_train = np.concatenate(x_train)
         if shuffle:
-            print("Shuffling test set...")
             np.random.set_state(rng_state)
             np.random.shuffle(x_test)
-            print("Shuffling train set...")
+            np.random.set_state(rng_state)
+            np.random.shuffle(x_val)
             np.random.set_state(rng_state)
             np.random.shuffle(x_train)
-
-    if 'y' in mode: 
-        print("Concatenating targets...")
-        y_test, y_train = np.concatenate(y_test), np.concatenate(y_train)
+    if 'y' in mode:
+        print("Preparing targets...")
+        y_test = np.concatenate(y_test)
+        y_val = np.concatenate(y_val)
+        y_train = np.concatenate(y_train)
         if shuffle:
-            print("Shuffling test set...")
             np.random.set_state(rng_state)
             np.random.shuffle(y_test)
-            print("Shuffling train set...")
+            np.random.set_state(rng_state)
+            np.random.shuffle(y_val)
             np.random.set_state(rng_state)
             np.random.shuffle(y_train)
 
-    print("Shape of final test, train dataset:", x_test.shape, x_train.shape)
+    print("Shapes of test, validation, train datasets:",
+          x_test.shape, x_val.shape, x_train.shape)
 
-    if 'x' in mode and 'y' in mode: return x_test, x_train, y_test, y_train
-    elif mode == 'x': return x_test, x_train
-    else: return y_test, y_train
-
-def load_model(model_name): return load(model_location + "%s.joblib" % model_name)
-def load_hist(model_name, subdir=''):
-    try:
-        return load(model_location + subdir + "%s_hist.joblib" % model_name) # keras
-    except FileNotFoundError:
-        try:
-            return load_model(model_name).evals_result() # xgboost
-        except:
-            raise FileNotFoundError("No training history found")
-    
-
-def save_model(model, model_name, hist=None, subloc=""):
-    ''' Save a model (and, optionally, its history)'''
-    dump(model, model_location+subloc + "%s.joblib" % model_name)
-    if hist: dump(hist, model_location + "%s_hist.joblib" % model_name)
-
-def is_invalid(array):
-    isn = np.isnan(array)
-    isi = np.isinf(array)
-    return np.any(np.logical_or(isn,isi))
-
-# class ntagGenerator(Sequence):
-#     '''
-#     Generate training or testing set in batches
-#     to speed up GPU performance and handle 
-#     larger-than-memory datasets
-#     for training / testing (train=True/False)
-#     Mode:     'xy'= each batch contains (features, targets)
-#               'x' = features only
-#               'y' = targets only
-#     '''
-#     def __init__(self, N10th=7, file_frac=0.005, test_frac=0.25, batch_size=32, train=True, mode='xy'):
-#         '''
-#         Initialize generator
-#         '''
-#         if mode not in ['xy','yx','x','y']: raise ValueError("mode must be chosen from: 'xy','yx','x','y'")
-#         self.N10th = N10th
-#         self.file_frac = file_frac
-#         #self.num_files = num_files
-#         self.test_frac = test_frac
-#         self.test_frac_num = int(1./self.test_frac)
-#         self.batch_size = batch_size
-#         self.train = train
-#         #self.files = [dset_location+'%03i.hdf5'%i for i in range(start_file, start_file+num_files)]
-#         self.files = glob(dset_location + '*')
-#         self.mode = mode
-#         self.lengths = [] # Number of entries for each data file
-#         self.indices = [] # Indices corresponding to valid entries after filtering, for each file
-#         self.__filter()
-
-#     def __filter(self):
-#         '''
-#         Apply cuts and select training/testing set
-#         '''
-#         for fname in self.files:
-#             f = h5py.File(fname,'r') # Load data
-#             dset = f[tree_name]
-#             tot_entries = len(dset)
-#             dset_indices = np.array(range(tot_entries)) # Get indices
-#             n_entries = np.ceil(tot_entries * self.file_frac)
-            
-#             select = dset_indices < n_entries # Only use file_frac of total file
-#             presel = dset["N10"]>=self.N10th  # Preselection cut
-#             frac = (dset["event_num"]%self.test_frac_num!=0) if self.train else (dset["event_num"]%self.test_frac_num==0) # Select testing or training fraction
-#             dset_indices = dset_indices[select & frac & presel] # Filtered indices, file-specific
-
-#             self.lengths += [len(dset_indices)]  # number of entries in current file
-#             self.indices += [dset_indices]
-
-#             f.close()
-#         self.l_tot = np.sum(self.lengths) # Total number of entries
+    if 'x' in mode and 'y' in mode:
+        return x_test, x_val, x_train, y_test, y_val, y_train
+    elif mode == 'x':
+        return x_test, x_val, x_train
+    else:
+        return y_test, y_val, y_train
 
 
-#     def __len__(self):
-#         '''Number of batches'''
-#         return int( np.ceil( self.l_tot / float(self.batch_size) ) )
+def load_model(model_name):
+    ''' Load BDT model for application. '''
+    return load("%s/%s/%s.joblib" % (MODELS_DIR, model_name, model_name))
 
-#     def __generate_batch(self, ifile, istart, istop):
-#         ''' Generate 1 batch of data'''
-#         f = h5py.File(self.files[ifile],'r') # Load data file
 
-#         batch_indices = list(self.indices[ifile][istart:istop])
-#         batch = f[tree_name][batch_indices] # Only load batch into memory
-        
-#         x_batch, y_batch = batch[varlist], batch["is_signal"]
-#         x_batch = unstructure(x_batch) # Remove ndarry structure
-#         if is_invalid(x_batch): raise ValueError("Invalid value found in a batch from file %d"%ifile)
+def load_hist(model_name):
+    ''' Load BDT evaluation metrics as function of training iterations. '''
+    return load_model(model_name).evals_result()  # xgboost
 
-#         if 'x' in self.mode and 'y' in self.mode: return x_batch, y_batch
-#         elif self.mode == 'x': return x_batch
-#         else: return y_batch
 
-#     def __getitem__(self, idx):
-#         '''Get batch of data number idx'''
-#         istart, istop = idx*self.batch_size, (idx+1)*self.batch_size
-#         if istop > self.l_tot: istop = self.l_tot # Resize the last batch
-
-#         ifile = 0
-#         multifile = False # Whether a batch includes entries from two files
-#         for i,l in enumerate(self.lengths):
-#             if istart >= l and not multifile: # Batch not in current file
-#                 istart -= l
-#                 istop -= l
-#             elif istop > l: # Batch starts in current file, ends in next
-#                 multifile = True
-#                 istop -= l
-#             else: # Batch starts and ends in current file
-#                 ifile = i
-#                 break
-    
-#         if multifile:
-#             istop0 = self.lengths[ifile-1]
-#             batch0 = self.__generate_batch(ifile-1, istart, istop0)
-#             batch1 = self.__generate_batch(ifile, 0, istop)
-#             if 'x' in self.mode and 'y' in self.mode:
-#                 return np.concatenate((batch0[0], batch1[0])), np.concatenate((batch0[1], batch1[1]))
-#             else: return np.concatenate((batch0, batch1))
-#         else:
-#             return self.__generate_batch(ifile, istart, istop)
+def save_model(model, model_name):
+    ''' Save BDT to disk. '''
+    dump(model, "%s/%s/%s.joblib" % (MODELS_DIR, model_name, model_name))

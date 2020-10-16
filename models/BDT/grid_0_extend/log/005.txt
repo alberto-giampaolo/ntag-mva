@@ -1,5 +1,0 @@
-Loading dataset...
-Training BDT
-Loaded parameter file: /home/llr/t2k/giampaolo/srn/ntag-mva/models/BDT/grid_0_extend/params/005.p
-Built BDT with these hyperparameters:
-{'learning_rate': 0.08997993444726603, 'n_estimators': 2299.0, 'subsample': 0.6038893350304065, 'maximum_depth': 4}

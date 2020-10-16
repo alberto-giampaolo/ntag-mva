@@ -1,1 +1,0 @@
-/var/lib/condor/execute/dir_93445/condor_exec.exe: line 9: 93560 Killed                  python $SEARCH_ITER $1

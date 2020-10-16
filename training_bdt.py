@@ -1,41 +1,68 @@
+"""
+BDT training script
+"""
+from __future__ import print_function
 import time
-from load_ntag import load_dset, save_model
-from sklearn.ensemble import GradientBoostingClassifier
+from os import environ
+
 from xgboost import XGBClassifier
-from metrics import plot_ROC_sigle, plot_loss
+
+from load_ntag import load_dset, save_model
 
 
-N10TH = 7
-NFILES = 2
-XGB = True # Whether to use XGBoost rather than regular Grad Boosting
-NTREES = 850
-LRATE = 0.1
-SSAMPLE = 0.5
-XGBstr = ('XGB_' if XGB else '')
-SSstr = ('%0.2fss_'%SSAMPLE if SSAMPLE!=1 else '')
-model_name = "BDT22_n%i_%itree_%0.3flrate_%s%s%i" % (N10TH,NTREES,LRATE,SSstr,XGBstr,NFILES)
-NTHREADS = 4
+N10TH = int(environ['n10th'])
+DSET_FRAC = float(environ['dset'])
+DSET_FRAC_BG = float(environ['dset_t2k'])
+NTREES = int(environ['ntrees'])
+EARLY_STOP = int(environ['early_stop'])
+LRATE = float(environ['lrate'])
+MAXDEPTH = int(environ['max_depth'])
+SSAMPLE = float(environ['subsample'])
+PWEIGHT = float(environ['pos_weight'])
+MODEL_NAME = environ['model_name']
+TEST_FRAC = float(environ['ntest'])
+NTHREADS = int(environ['nthreads'])
 
 # Load dataset
-x_test, x_train, y_test, y_train = load_dset(N10TH, NFILES/200., 0.25)
+loadstart = time.time()
+print("Dataset location:", environ['ntag_hdf5_dir_train'])
+print("Using", DSET_FRAC * 100., "% of available dset, of which",
+       TEST_FRAC * 100., "% is set aside")
+print("for validation and", TEST_FRAC * 100., "% for testing.")
+print("Preselection: N10 >=", N10TH)
+print("Loading....")
+ntag_dset = load_dset(N10th=N10TH, file_frac_s=DSET_FRAC,
+                      file_frac_bg=DSET_FRAC_BG, test_frac=TEST_FRAC,
+                      shuffle=True)
+_, x_val, x_train, _, y_val, y_train = ntag_dset
+print("Loaded in", time.time() - loadstart, "seconds")
+print("")
 
 # Define neutron tagging model and start training
-#ntag_model = GradientBoostingClassifier(learning_rate=1.0,max_depth=3,n_estimators=850,min_samples_leaf=0.05,random_state=1,verbose=1)
-ntag_model = XGBClassifier(learning_rate=LRATE,n_estimators=NTREES,subsample=SSAMPLE,verbosity=1,nthread=NTHREADS) # XGBoost
-start_time = time.time()
-ntag_model.fit(x_train,y_train,eval_set=[(x_train,y_train),(x_test,y_test)],eval_metric='mae')
-end_time = time.time()
-training_dt = end_time-start_time
-print("Trained model in %f seconds" % training_dt)
+ntag_model = XGBClassifier(learning_rate=LRATE,
+                           n_estimators=NTREES,
+                           max_depth=MAXDEPTH,
+                           subsample=SSAMPLE,
+                           scale_pos_weight=PWEIGHT,
+                           verbosity=1,
+                           nthread=NTHREADS)
+print("BDT hyperparams:")
+print( {'learning_rate': LRATE,
+        'n_estimators': NTREES,
+        'max_depth': MAXDEPTH,
+        'subsample': SSAMPLE,
+        'scale_pos_weight': PWEIGHT,} )
+print("")
+
+print("Training BDT...")
+trainstart = time.time()
+ntag_model.fit(x_train,y_train,
+               eval_set=[(x_train,y_train),(x_val,y_val)],
+               eval_metric=['mae', 'aucpr', 'auc'],
+               early_stopping_rounds=EARLY_STOP)
+print("Trained model in", time.time() - trainstart, "seconds")
 
 # Save model
-save_model(ntag_model, model_name)
+save_model(ntag_model, MODEL_NAME)
 print("Saved model to disk.")
-
-# Plot ROC curve
-print("Plotting performance (ROC)")
-plot_ROC_sigle(x_test,y_test,ntag_model,model_name,N10TH)
-# Plot loss function change
-#print("Plotting loss evolution")
-#plot_loss(ntag_model,NTREES,x_test,y_test)
 print("All done!")
